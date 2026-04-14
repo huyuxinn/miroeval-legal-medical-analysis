@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MiroEval — Legal & Medical Analysis</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F7F5ED;color:#1a1917;margin:0;padding:80px 24px;min-height:100vh;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;}
+.wrap{max-width:640px;width:100%;}
+h1{font-family:Georgia,serif;font-weight:500;font-size:clamp(1.7rem,3vw,2.2rem);letter-spacing:-.01em;margin:0 0 12px;}
+p.lede{color:#5a5853;font-size:1rem;line-height:1.7;margin:0 0 40px;}
+.grid{display:grid;grid-template-columns:1fr;gap:14px;}
+a.card{position:relative;display:block;padding:24px 28px;border:1px solid rgba(26,25,23,.12);border-radius:8px;background:#fff;text-decoration:none;color:inherit;transition:box-shadow .15s,border-color .15s,transform .15s;overflow:hidden;}
+a.card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;}
+a.card.legal::before{background:#5BA08A;}
+a.card.medical::before{background:#6B8FC2;}
+a.card:hover{box-shadow:0 4px 16px rgba(0,0,0,.06);border-color:rgba(26,25,23,.2);transform:translateY(-1px);}
+.card h2{font-family:Georgia,serif;font-weight:600;font-size:1.15rem;margin:0 0 6px;}
+.card .meta{font-size:.82rem;color:#73706a;letter-spacing:.06em;text-transform:uppercase;font-weight:600;margin-bottom:10px;}
+.card p{color:#3d3b37;font-size:.92rem;line-height:1.65;margin:0;}
+.foot{margin-top:48px;font-size:.78rem;color:#a5a39e;}
+</style></head><body><div class="wrap">
+<h1>MiroEval · Domain Analysis</h1>
+<p class="lede">6 款 Deep Research 模型在 Legal 与 Medical 两个专业领域上的评测分析面板。</p>
+<div class="grid">
+<a class="card legal" href="legal_analysis.html"><div class="meta">Legal · 10 queries</div><h2>Legal Domain Analysis →</h2><p>跨法域判例对比、法条冲突、AI 等新兴议题。</p></a>
+<a class="card medical" href="medical_analysis.html"><div class="meta">Medical · 10 queries</div><h2>Medical Domain Analysis →</h2><p>复杂临床决策、证据综合、疗法创新评估。</p></a>
+</div>
+<div class="foot">Generated 2026-04-14 · 6 Models · 3 Evaluation Dimensions</div>
+</div></body></html>
