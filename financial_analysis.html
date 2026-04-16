@@ -1,0 +1,1806 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Financial Analyst Domain Analysis Dashboard</title>
+<style>
+
+:root {
+    --bg-primary: #FAF9F6;        /* Main parchment */
+    --bg-secondary: #F3F0EB;      /* Secondary warm tier */
+    --bg-tertiary: #EDE8E1;       /* Deeper warm for hover/emphasis */
+    --bg-white: #FFFFFF;          /* Card surface */
+
+    --accent: #C45A3C;            /* Refined terracotta */
+    --accent-light: #E8A590;
+    --accent-bg: rgba(196,90,60,.06);
+    --accent-bg-hover: rgba(196,90,60,.10);
+
+    --text-primary: #1A1612;      /* Warm black */
+    --text-secondary: #5D544B;
+    --text-tertiary: #8C8278;
+    --text-inverse: #FAF9F6;
+
+    --border: #E5DFD7;
+    --border-light: #EFEBE5;
+
+    /* Multi-color semantic tags (low-saturation, warm-grounded) */
+    --tag-blue-bg: #EEF2F7; --tag-blue: #4A6FA5;
+    --tag-green-bg: #EDF5F0; --tag-green: #3D7A5F;
+    --tag-orange-bg: #FDF1EB; --tag-orange: #B85C38;
+    --tag-red-bg: #FBEEED; --tag-red: #B54A4A;
+    --tag-purple-bg: #F2EFF7; --tag-purple: #6B5B95;
+    --tag-teal-bg: #EDF5F4; --tag-teal: #3D7A72;
+
+    --radius: 14px;
+    --radius-sm: 10px;
+    --radius-xs: 7px;
+
+    --shadow-sm: 0 1px 3px rgba(26,22,18,.04), 0 1px 2px rgba(26,22,18,.06);
+    --shadow: 0 2px 8px rgba(26,22,18,.05), 0 1px 3px rgba(26,22,18,.08);
+    --shadow-lg: 0 8px 24px rgba(26,22,18,.06), 0 2px 8px rgba(26,22,18,.04);
+
+    --font-serif: "Noto Serif SC", "Songti SC", "SimSun", Georgia, serif;
+    --font-sans: "Noto Sans SC", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    --font-mono: "SF Mono", "Fira Code", Consolas, monospace;
+
+    /* Legacy aliases for backward compat within this file */
+    --primary: var(--accent);
+    --primary-soft: var(--bg-secondary);
+    --bg: var(--bg-primary);
+    --card-bg: var(--bg-white);
+    --card-elevated: var(--bg-white);
+    --text: var(--text-primary);
+    --text-light: var(--text-secondary);
+    --border-warm: var(--border);
+    --ring-warm: var(--border);
+    --mirothinker: var(--accent);
+    --mirothinker-soft: var(--tag-orange-bg);
+    --coral: var(--accent-light);
+    --warning: var(--tag-orange);
+    --danger: var(--tag-red);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--font-sans); background: var(--bg-primary); color: var(--text-primary); line-height: 1.75; -webkit-font-smoothing: antialiased; font-size: 16px; }
+.container { max-width: 1280px; margin: 0 auto; padding: 56px 48px 96px; }
+h1 { font-family: var(--font-serif); font-size: clamp(2.2rem, 4vw, 3rem); font-weight: 900; line-height: 1.2; letter-spacing: -0.02em; color: var(--text-primary); }
+h2 { font-family: var(--font-serif); font-size: clamp(1.5rem, 2.4vw, 2.1rem); font-weight: 700; line-height: 1.3; color: var(--text-primary); letter-spacing: -0.01em; }
+h3 { font-family: var(--font-serif); font-size: 1.2rem; font-weight: 700; color: var(--text-primary); line-height: 1.35; letter-spacing: -0.005em; }
+h4 { font-size: 1.05rem; font-weight: 600; color: var(--text-primary); }
+.subtitle { color: var(--text-tertiary); margin-bottom: 48px; font-size: 1.05rem; }
+.overline { display: inline-block; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+.eyebrow { display: inline-flex; align-items: center; gap: 8px; background: var(--accent-bg); border: 1px solid rgba(196,90,60,.14); border-radius: 50px; padding: 5px 14px; font-size: 0.76rem; font-weight: 500; color: var(--accent); margin-bottom: 18px; }
+.eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+a { color: var(--accent); text-decoration: none; }
+.highlight { color: var(--accent); }
+
+/* Generic section block */
+.section-block { margin-bottom: 52px; }
+
+/* Overview Panel */
+.overview-panel { background: var(--bg-white); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 36px 40px; box-shadow: var(--shadow-sm); margin-bottom: 36px; }
+.overview-table { width: 100%; border-collapse: collapse; margin-top: 24px; }
+.overview-table th, .overview-table td { padding: 14px 16px; text-align: center; border-bottom: 1px solid var(--border-light); }
+.overview-table th { background: transparent; font-weight: 600; color: var(--text-tertiary); font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1.5px solid var(--border); }
+.overview-table td { color: var(--text-secondary); font-size: 0.96rem; }
+.overview-table td strong { color: var(--text-primary); font-weight: 600; }
+.overview-table tbody tr { transition: background 0.15s; }
+.overview-table tbody tr:hover { background: var(--bg-secondary); }
+.rank-badge { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; font-weight: 700; font-size: 0.95rem; font-family: var(--font-serif); background: var(--bg-secondary); color: var(--text-tertiary); }
+.rank-1 { background: var(--accent); color: #fff; }
+.rank-2 { background: var(--bg-tertiary); color: var(--text-secondary); box-shadow: 0 0 0 1.5px var(--border); }
+.rank-3 { background: var(--bg-secondary); color: var(--text-secondary); }
+.mirothinker-row { background: var(--accent-bg) !important; }
+.mirothinker-row:hover { background: var(--accent-bg-hover) !important; }
+.mirothinker-row td:first-child { border-left: 2px solid var(--accent); }
+.overview-notes { list-style: none; margin: 22px 0 0; padding: 0; }
+.overview-notes-item { font-size: 0.82rem; color: var(--text-tertiary); line-height: 1.75; margin: 2px 0; }
+.overview-notes-item::before { content: "·"; color: var(--text-tertiary); margin-right: 8px; }
+
+/* Tabs */
+.tab-container { margin: 40px 0; }
+.tab-buttons { display: flex; gap: 2px; flex-wrap: wrap; border-bottom: 1px solid var(--border); padding-bottom: 0; margin-bottom: 4px; }
+.tab-btn { font-family: var(--font-sans); padding: 12px 20px; border: none; background: none; cursor: pointer; font-size: 0.92rem; color: var(--text-tertiary); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; font-weight: 500; }
+.tab-btn:hover { color: var(--text-secondary); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+.tab-content { display: none; padding: 32px 0 20px; }
+.tab-content.active { display: block; }
+
+/* Cards (generic body card inside tabs / overview) */
+.card { background: var(--bg-white); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 32px; box-shadow: var(--shadow-sm); margin-bottom: 24px; transition: box-shadow 0.2s, border-color 0.2s; }
+.card:hover { box-shadow: var(--shadow); border-color: var(--border); }
+/* Query text — collapsible via <details> */
+.query-details { margin: 0 0 26px; }
+.query-details > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 14px; padding: 14px 20px; background: var(--bg-secondary); border: 1px solid var(--border-light); border-radius: var(--radius-sm); transition: background 0.15s ease, border-color 0.15s ease; user-select: none; }
+.query-details > summary::-webkit-details-marker { display: none; }
+.query-details > summary:hover { background: var(--bg-tertiary); border-color: var(--border); }
+.query-summary-label { font-family: var(--font-serif); font-size: 1.1rem; font-weight: 700; color: var(--text-primary); letter-spacing: -0.005em; }
+.query-summary-hint { font-size: 0.78rem; color: var(--text-tertiary); margin-left: auto; letter-spacing: 0.05em; }
+.query-summary-chevron { display: inline-block; font-size: 1.3rem; color: var(--accent); line-height: 1; transform: rotate(90deg); transition: transform 0.2s ease; font-weight: 600; }
+.query-details[open] > summary { background: var(--bg-tertiary); border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom-color: transparent; }
+.query-details[open] > summary .query-summary-chevron { transform: rotate(270deg); color: var(--text-secondary); }
+.query-details[open] > summary .query-summary-hint::before { content: "点击收起"; }
+.query-details[open] > summary .query-summary-hint { visibility: hidden; position: relative; }
+.query-details[open] > summary .query-summary-hint::before { visibility: visible; position: absolute; right: 0; }
+.query-text { background: var(--bg-secondary); border: 1px solid var(--border-light); border-top: none; border-radius: 0 0 var(--radius-sm) var(--radius-sm); padding: 22px 26px; margin: 0; font-size: 1rem; line-height: 1.85; color: var(--text-primary); white-space: pre-wrap; font-family: var(--font-serif); font-weight: 400; }
+
+/* Dumbbell score distribution */
+.db-card { background: var(--bg-secondary); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 26px 30px 40px; margin: 22px 0 8px; }
+.db-header { margin-bottom: 22px; }
+.db-header .overline { margin-bottom: 6px; }
+.db-header h4 { font-family: var(--font-serif); font-size: 1.08rem; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; }
+.db-hint { font-size: 0.8rem; color: var(--text-tertiary); line-height: 1.7; }
+.db-legend-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; vertical-align: middle; margin: 0 4px 0 8px; border: 1.5px solid var(--bg-white); box-shadow: 0 0 0 1px var(--text-tertiary); }
+.db-legend-miro { background: var(--accent); box-shadow: 0 0 0 1.5px var(--accent); }
+.db-legend-other { background: var(--text-tertiary); }
+.db-grid { display: flex; flex-direction: column; gap: 30px; padding-top: 6px; }
+.db-row { display: grid; grid-template-columns: 120px 1fr; align-items: center; gap: 24px; }
+.db-label { font-family: var(--font-sans); font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.14em; padding-top: 30px; }
+/* Axis just wraps the inner track; dots positioned inside track */
+.db-axis { position: relative; min-height: 92px; display: block; }
+.db-track { position: relative; height: 82px; }
+.db-baseline { position: absolute; bottom: 16px; left: 6px; right: 6px; height: 1px; background: var(--border); }
+.db-track::before, .db-track::after { content: ""; position: absolute; bottom: 12px; width: 1px; height: 9px; background: var(--border); }
+.db-track::before { left: 6px; }
+.db-track::after { right: 6px; }
+.db-dot { position: absolute; bottom: 12px; width: 10px; height: 10px; border-radius: 50%; background: var(--text-tertiary); border: 1.5px solid var(--bg-secondary); box-shadow: 0 0 0 1px var(--text-tertiary); transform: translate(-50%, 50%); cursor: default; transition: transform 0.18s ease; z-index: 1; }
+.db-dot-miro { background: var(--accent); box-shadow: 0 0 0 1.5px var(--accent); width: 13px; height: 13px; z-index: 3; border-color: var(--bg-secondary); }
+.db-dot:hover { transform: translate(-50%, 50%) scale(1.35); z-index: 20; }
+.db-dot:hover .db-name { color: var(--accent); }
+/* Connector: thin vertical line from dot up to its label row */
+.db-connector { position: absolute; left: 50%; bottom: 50%; width: 1px; background: var(--border); transform: translateX(-50%); height: calc(12px + var(--row, 0) * 18px); pointer-events: none; }
+.db-dot-miro .db-connector { background: var(--accent-light); }
+/* Label — always visible, placed above dot at a staggered row */
+.db-name { position: absolute; left: 50%; bottom: calc(50% + 12px + var(--row, 0) * 18px); transform: translate(-50%, 0); font-family: var(--font-sans); font-size: 0.74rem; font-weight: 600; color: var(--text-secondary); white-space: nowrap; line-height: 1.2; pointer-events: none; }
+.db-name.is-miro { color: var(--accent); font-weight: 700; }
+/* Edge-anchored labels: pin to dot's left/right so they never overflow the track */
+.db-dot.db-edge-left .db-name { transform: translate(0, 0); }
+.db-dot.db-edge-right .db-name { transform: translate(-100%, 0); }
+
+/* Ribbon divider — subtle section separator */
+.ribbon-divider { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 52px auto 44px; max-width: 520px; }
+.ribbon-divider .ribbon-line { flex: 1; height: 1px; background: linear-gradient(to right, transparent 0%, var(--border) 30%, var(--border) 70%, transparent 100%); }
+.ribbon-divider .ribbon-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-light); box-shadow: 0 0 0 4px var(--bg-primary), 0 0 0 5px var(--border); flex-shrink: 0; }
+
+/* Score table */
+.score-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 16px 0 6px; }
+.score-table th, .score-table td { padding: 11px 12px; border-bottom: 1px solid var(--border-light); text-align: center; color: var(--text-secondary); }
+.score-table th { background: transparent; color: var(--text-tertiary); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1.5px solid var(--border); }
+.score-table td:first-child, .score-table th:first-child { text-align: left; color: var(--text-primary); }
+.score-table tr:last-child td { border-bottom: none; }
+
+
+/* Hero TL;DR section — container styled like overview-panel for heading-level parity */
+.hero-section { background: var(--bg-white); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 36px 40px; box-shadow: var(--shadow-sm); margin: 40px 0 52px; }
+.hero-section h2 { margin-bottom: 10px; }
+.hero-subtitle { color: var(--text-tertiary); font-size: 0.98rem; margin-bottom: 26px; }
+.hero-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; }
+.hero-card { position: relative; display: flex; gap: 16px; padding: 26px 26px 24px; border-radius: var(--radius); background: var(--bg-white); border: 1px solid var(--border-light); overflow: hidden; transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s; }
+.hero-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent); }
+.hero-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); border-color: var(--border); }
+.hero-card.hero-miro { background: var(--accent-bg); }
+.hero-card.hero-miro:hover { background: var(--accent-bg-hover); }
+.hero-icon { font-size: 1.5rem; line-height: 1; flex-shrink: 0; padding-top: 3px; }
+.hero-body { flex: 1; min-width: 0; }
+.hero-card-title { font-family: var(--font-sans); font-size: 0.72rem; font-weight: 700; color: var(--accent); letter-spacing: 0.14em; margin-bottom: 10px; text-transform: uppercase; }
+.hero-card-text { font-size: 0.96rem; line-height: 1.7; color: var(--text-secondary); }
+
+/* Key Observations — Editorial Panel (Option A), mirrors .persona-intro-section */
+.ko-section-panel { background: var(--bg-white); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 40px 44px; margin-bottom: 36px; box-shadow: var(--shadow-sm); }
+.ko-section-panel h2 { margin: 8px 0 14px; }
+.ko-lede { font-family: var(--font-sans); font-size: 1rem; color: var(--text-secondary); line-height: 1.8; margin: 0 0 28px; max-width: 780px; }
+
+.ko-findings { display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap: 20px; }
+
+.ko-finding-card { position: relative; border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 28px 28px 24px; background: var(--bg-white); overflow: hidden; }
+.ko-finding-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.ko-finding-card.ko-good::before { background: var(--tag-green); }
+.ko-finding-card.ko-bad::before { background: var(--tag-red, #c45a3c); }
+
+.ko-finding-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.ko-finding-tag { font-family: var(--font-serif); font-weight: 700; font-size: 1.12rem; letter-spacing: -0.005em; }
+.ko-finding-card.ko-good .ko-finding-tag { color: var(--tag-green); }
+.ko-finding-card.ko-bad .ko-finding-tag { color: var(--tag-red, #c45a3c); }
+.ko-finding-en { font-family: var(--font-sans); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.18em; color: var(--text-tertiary); text-transform: uppercase; }
+
+.ko-finding-headline { font-family: var(--font-serif); font-weight: 500; font-size: 1.05rem; line-height: 1.75; color: var(--text-primary); margin: 0 0 22px; }
+
+/* Representative query callout — mirrors .persona-insight */
+.ko-query-callout { background: var(--bg-secondary); border-left: 3px solid var(--accent); padding: 16px 20px; border-radius: 0 var(--radius-sm, 4px) var(--radius-sm, 4px) 0; margin-bottom: 24px; }
+.ko-query-cap { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; gap: 10px; }
+.ko-cap-label { font-family: var(--font-sans); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.16em; color: var(--text-tertiary); text-transform: uppercase; }
+.ko-cap-id { font-family: var(--font-mono); font-size: 0.78rem; color: var(--accent); font-weight: 600; }
+.ko-query-body { font-family: var(--font-sans); font-size: 0.88rem; line-height: 1.75; color: var(--text-secondary); margin: 0 0 12px; padding: 0; white-space: pre-wrap; }
+.ko-query-metric { font-family: var(--font-sans); font-size: 0.82rem; color: var(--text-tertiary); padding-top: 10px; border-top: 1px dashed var(--border-light); }
+.ko-query-metric strong { color: var(--text-primary); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.ko-sub-heading { font-family: var(--font-serif); font-weight: 600; font-size: 1rem; color: var(--text-primary); margin: 26px 0 4px; }
+.ko-sub-note { font-family: var(--font-sans); font-size: 0.82rem; color: var(--text-tertiary); line-height: 1.65; margin: 0 0 14px; }
+
+/* Model mini-cards — mirrors .qtype-grid + .qtype-card */
+.ko-model-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; margin-bottom: 6px; }
+.ko-model-tile { position: relative; border: 1px solid var(--border-light); border-radius: var(--radius-sm, 4px); padding: 14px 16px 12px 20px; background: var(--bg-white); transition: box-shadow 0.15s, border-color 0.15s; overflow: hidden; }
+.ko-model-tile::before { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 3px; background: var(--border); }
+.ko-model-tile:hover { box-shadow: var(--shadow-sm); border-color: var(--border); }
+.ko-model-tile.is-miro::before { background: var(--tag-purple); }
+.ko-model-tile.is-miro { background: linear-gradient(90deg, var(--tag-purple-bg) 0%, var(--bg-white) 18%); }
+.ko-tile-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+.ko-tile-name { font-family: var(--font-serif); font-weight: 700; font-size: 0.98rem; color: var(--text-primary); letter-spacing: -0.005em; }
+.ko-tile-len { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-tertiary); }
+.ko-tile-scores { display: flex; flex-wrap: wrap; gap: 10px; font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-tertiary); margin-bottom: 8px; }
+.ko-tile-scores b { color: var(--text-primary); font-weight: 600; font-variant-numeric: tabular-nums; }
+.ko-tile-summary { font-family: var(--font-sans); font-size: 0.85rem; line-height: 1.65; color: var(--text-secondary); margin: 0; }
+
+/* Why analysis tiles — mirrors .diff-grid + .diff-card */
+.ko-why-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+.ko-why-tile { background: var(--bg-secondary); border-radius: var(--radius-sm, 4px); padding: 12px 16px; }
+.ko-why-tile-title { font-family: var(--font-serif); font-weight: 600; font-size: 0.92rem; color: var(--text-primary); margin-bottom: 4px; letter-spacing: -0.005em; }
+.ko-finding-card.ko-good .ko-why-tile-title { color: var(--tag-green); }
+.ko-finding-card.ko-bad .ko-why-tile-title { color: var(--tag-red, #c45a3c); }
+.ko-why-tile-body { font-family: var(--font-sans); font-size: 0.83rem; line-height: 1.65; color: var(--text-secondary); margin: 0; }
+
+@media (max-width: 960px) {
+    .ko-findings { grid-template-columns: 1fr; }
+}
+
+/* Persona intro section */
+.persona-intro-section { background: var(--bg-white); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 40px 44px; margin-bottom: 36px; box-shadow: var(--shadow-sm); }
+.persona-intro-section h3 { margin: 28px 0 16px; font-size: 1.1rem; }
+.persona-intro-section h3:first-of-type { margin-top: 8px; }
+.persona-insight { font-family: var(--font-sans); font-size: 1rem; color: var(--text-secondary); background: var(--bg-secondary); border-left: 3px solid var(--accent); padding: 18px 22px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin: 0 0 24px; line-height: 1.85; }
+.persona-insight strong { color: var(--text-primary); }
+.qtype-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.qtype-card { position: relative; border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 20px 22px 18px; background: var(--bg-white); overflow: hidden; transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s; }
+.qtype-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent); }
+.qtype-card:nth-child(6n+2)::before { background: var(--tag-teal); }
+.qtype-card:nth-child(6n+3)::before { background: var(--tag-purple); }
+.qtype-card:nth-child(6n+4)::before { background: var(--tag-green); }
+.qtype-card:nth-child(6n+5)::before { background: var(--tag-blue); }
+.qtype-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); border-color: var(--border); }
+.qtype-head { margin-bottom: 10px; display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+.qtype-name { font-family: var(--font-serif); font-weight: 700; color: var(--text-primary); font-size: 1.1rem; }
+.qtype-en { color: var(--text-tertiary); font-size: 0.82rem; font-weight: 400; }
+.qtype-weight { font-size: 0.72rem; color: var(--text-tertiary); margin-left: auto; font-weight: 400; }
+.qtype-desc { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7; }
+.diff-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.diff-card { background: var(--bg-secondary); border: none; border-radius: var(--radius-sm); padding: 14px 18px; transition: background 0.15s; }
+.diff-card:hover { background: var(--bg-tertiary); }
+.diff-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 10px; }
+.diff-name { font-weight: 600; font-size: 0.92rem; color: var(--text-primary); }
+.diff-tag { font-size: 0.68rem; background: var(--tag-purple-bg); color: var(--tag-purple); padding: 3px 10px; border-radius: 50px; font-family: var(--font-mono); letter-spacing: 0; font-weight: 500; }
+.diff-desc { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.65; }
+
+/* Execution pattern observation section — matches overview-panel container treatment */
+.execution-pattern-section { background: var(--bg-white); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 36px 40px; margin: 28px 0 36px; box-shadow: var(--shadow-sm); }
+.execution-pattern-section h2 { margin-bottom: 22px; }
+.exec-para { font-family: var(--font-sans); font-size: 0.98rem; line-height: 1.9; color: var(--text-secondary); margin-bottom: 16px; padding-left: 16px; border-left: 3px solid transparent; }
+.exec-para:last-child { margin-bottom: 0; }
+.exec-para.pattern { border-left-color: var(--tag-blue); background: linear-gradient(to right, var(--bg-secondary) 0%, transparent 40%); padding: 14px 18px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+.exec-para.top-model { border-left-color: var(--tag-green); padding: 8px 16px 8px 18px; }
+.exec-para.mirothinker { border-left-color: var(--tag-purple); padding: 8px 16px 8px 18px; background: linear-gradient(to right, var(--tag-purple-bg) 0%, transparent 50%); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+.exec-para strong { color: var(--text-primary); font-weight: 600; }
+.exec-para code { font-family: var(--font-mono); font-size: 0.88em; background: var(--bg-tertiary); color: var(--text-primary); padding: 2px 6px; border-radius: 3px; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .db-row { grid-template-columns: 70px 1fr; gap: 14px; }
+    .db-label { font-size: 0.68rem; padding-top: 24px; }
+    .db-name { font-size: 0.68rem; }
+}
+
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Financial Analyst Domain <span class="highlight">Analysis</span></h1>
+<p class="subtitle">6 Models &nbsp;·&nbsp; 15 Queries &nbsp;·&nbsp; 3 Evaluation Dimensions</p>
+
+<div class="overview-panel">
+<span class="overline">Model Rankings</span>
+<h2>整体表现一览</h2>
+<table class="overview-table">
+<thead><tr>
+<th>Rank</th><th>Model</th><th>Process</th><th>Synthesis</th><th>Factuality</th><th>Total</th>
+</tr></thead>
+<tbody>
+<tr class="mirothinker-row">
+<td><span class="rank-badge rank-1">1</span></td>
+<td><strong>MiroThinker v17</strong></td>
+<td>6.73</td>
+<td>7.56</td>
+<td>67.68%</td>
+<td><strong>7.56</strong></td>
+</tr>
+<tr>
+<td><span class="rank-badge rank-2">2</span></td>
+<td><strong>Gemini</strong></td>
+<td>6.51</td>
+<td>7.52</td>
+<td>58.25%</td>
+<td><strong>7.52</strong></td>
+</tr>
+<tr class="mirothinker-row">
+<td><span class="rank-badge rank-3">3</span></td>
+<td><strong>MiroThinker v17 Mini</strong></td>
+<td>6.30</td>
+<td>7.44</td>
+<td>65.48%</td>
+<td><strong>7.44</strong></td>
+</tr>
+<tr>
+<td><span class="rank-badge">4</span></td>
+<td><strong>GPT</strong></td>
+<td>7.23</td>
+<td>7.18</td>
+<td>66.97%</td>
+<td><strong>7.19</strong></td>
+</tr>
+<tr>
+<td><span class="rank-badge">5</span></td>
+<td><strong>Claude</strong></td>
+<td>6.65</td>
+<td>6.91</td>
+<td>56.97%</td>
+<td><strong>6.91</strong></td>
+</tr>
+<tr>
+<td><span class="rank-badge">6</span></td>
+<td><strong>GLM Turbo</strong></td>
+<td>6.07</td>
+<td>6.90</td>
+<td>59.35%</td>
+<td><strong>6.90</strong></td>
+</tr>
+
+</tbody>
+</table>
+<ul class="overview-notes">
+<li class="overview-notes-item">v17 擅长财报交叉验证和信号冲突调和，Mini 擅长快速整合多维度信息</li>
+<li class="overview-notes-item">Gemini 在该领域排名靠前，其数据时效性优势在金融场景中发挥显著</li>
+
+</ul>
+</div>
+
+<div class="execution-pattern-section">
+<span class="overline">Execution Patterns</span>
+<h2>模型执行模式与表现观察</h2>
+<p class="exec-para pattern">针对 Financial 这类问题（信号冲突调和、财报交叉验证、监管合规分析、投资组合构建），所有模型都呈现一套共同的执行模式：提取关键财务/宏观数据 → 建立多维度对比框架（时间序列 × 横截面 × 法域）→ 识别矛盾信号并归因 → 给出可操作的投资建议或风控方案。差异主要在于数据精度和多维联动推理的深度。</p>
+<p class="exec-para top-model">表现最好的 <strong>MiroThinker v17</strong>（总分 7.56）依靠 Synthesis 质量取胜：Synthesis <code>7.56</code>、Process <code>6.73</code> 均为第一，alignment 得分 <code>6.98</code> 显著领先其他模型，Critical Thinking <code>7.0</code> 也处于领先水平。</p>
+<p class="exec-para mirothinker">在这些方面，MiroThinker 系列表现突出：<strong>MiroThinker v17</strong> 以 Synthesis <code>7.56</code> 位居第一，MiroThinker v17 Mini 以 <code>7.44</code> 紧随其后，领先非 MiroThinker 最佳的 Gemini（7.52）；MiroThinker v17 的 Factuality <code>67.7%</code> 同样领先于 Gemini（58.2%）；Search Breadth <code>7.1</code>、Critical Thinking <code>7.0</code> 表现稳健。</p>
+</div>
+
+<div class="ribbon-divider"><span class="ribbon-line"></span><span class="ribbon-dot"></span><span class="ribbon-line"></span></div>
+
+<div class="ko-section-panel">
+<span class="overline">Key Takeaways</span>
+<h2>关键观察</h2>
+<p class="ko-lede">基于 15 道开放式专业查询的评测结果，我们识别出以下共性模式。</p>
+<div class="ko-findings">
+<article class="ko-finding-card ko-good">
+<div class="ko-finding-head">
+<span class="ko-finding-tag">共性优势</span>
+<span class="ko-finding-en">COMMON STRENGTH</span>
+</div>
+<p class="ko-finding-headline">在宏观推演和传导链分析的查询中，所有模型均能给出较为完整的分析框架。清晰的因果传导逻辑和丰富的公开经济数据为模型提供了稳定的分析基础。</p>
+<div class="ko-query-callout">
+<div class="ko-query-cap">
+<span class="ko-cap-label">Representative Query</span>
+<span class="ko-cap-id">Q103</span>
+</div>
+<p class="ko-query-body">美伊战争对是否会引起通货膨胀？影响的传导链是什么样的？</p>
+<p class="ko-query-metric">6 模型 Synthesis 均值 <strong>7.82</strong>，Factuality 均值 <strong>82.6%</strong>，极差 <strong>0.55</strong>。</p>
+</div>
+<h3 class="ko-sub-heading">各模型在该 Query 的回答摘要</h3>
+<p class="ko-sub-note">按 Synthesis 分数降序。MiroThinker 以紫色色条标注。</p>
+<div class="ko-model-grid">
+<div class="ko-model-tile">
+<div class="ko-tile-head">
+<span class="ko-tile-name">GPT</span>
+</div>
+<div class="ko-tile-scores">
+<span>Proc <b>7.1</b></span>
+<span>Synth <b>8.11</b></span>
+<span>Fact <b>97%</b></span>
+</div>
+<p class="ko-tile-summary">Synthesis 8.11，Coverage 8.4、Insight 8.1，整体表现稳健，fact 97%。</p>
+</div>
+<div class="ko-model-tile is-miro">
+<div class="ko-tile-head">
+<span class="ko-tile-name">MiroThinker v17 Mini</span>
+</div>
+<div class="ko-tile-scores">
+<span>Proc <b>5.8</b></span>
+<span>Synth <b>8.06</b></span>
+<span>Fact <b>82%</b></span>
+</div>
+<p class="ko-tile-summary">Synthesis 8.06，Coverage 9.0、Insight 8.0，整体表现稳健，fact 82%。</p>
+</div>
+<div class="ko-model-tile">
+<div class="ko-tile-head">
+<span class="ko-tile-name">Gemini</span>
+</div>
+<div class="ko-tile-scores">
+<span>Proc <b>6.6</b></span>
+<span>Synth <b>7.99</b></span>
+<span>Fact <b>72%</b></span>
+</div>
+<p class="ko-tile-summary">Synthesis 7.99，Insight 8.5，虽低于均值但要素完整，fact 72%。</p>
+</div>
+<div class="ko-model-tile">
+<div class="ko-tile-head">
+<span class="ko-tile-name">GLM Turbo</span>
+</div>
+<div class="ko-tile-scores">
+<span>Proc <b>5.1</b></span>
+<span>Synth <b>7.62</b></span>
+<span>Fact <b>82%</b></span>
+</div>
+<p class="ko-tile-summary">Synthesis 7.62，Insight 7.7，虽低于均值但要素完整，fact 82%。</p>
+</div>
+<div class="ko-model-tile is-miro">
+<div class="ko-tile-head">
+<span class="ko-tile-name">MiroThinker v17</span>
+</div>
+<div class="ko-tile-scores">
+<span>Proc <b>6.2</b></span>
+<span>Synth <b>7.60</b></span>
+<span>Fact <b>96%</b></span>
+</div>
+<p class="ko-tile-summary">Synthesis 7.60，Insight 7.5，虽低于均值但要素完整，fact 96%。</p>
+</div>
+<div class="ko-model-tile">
+<div class="ko-tile-head">
+<span class="ko-tile-name">Claude</span>
+</div>
+<div class="ko-tile-scores">
+<span>Proc <b>6.1</b></span>
+<span>Synth <b>7.56</b></span>
+<span>Fact <b>66%</b></span>
+</div>
+<p class="ko-tile-summary">Synthesis 7.56，Insight 7.8，虽低于均值但要素完整，fact 66%。</p>
+</div>
+
+</div>
+<h3 class="ko-sub-heading">为什么 6 个模型都能做好？</h3>
+<div class="ko-why-grid">
+<div class="ko-why-tile">
+<div class="ko-why-tile-title">宏观框架成熟</div>
+<p class="ko-why-tile-body">宏观经济传导链（货币政策 → 利率 → 资产价格）是经济学标准分析框架，模型都已内化。</p>
+</div>
+<div class="ko-why-tile">
+<div class="ko-why-tile-title">公开数据丰富</div>
+<p class="ko-why-tile-body">央行利率、CPI、GDP 等宏观数据公开透明，模型可以准确引用。</p>
+</div>
+<div class="ko-why-tile">
+<div class="ko-why-tile-title">逻辑链明确</div>
+<p class="ko-why-tile-body">因果传导关系有明确的经济学理论支撑（供需理论、利率平价等），模型可以按标准逻辑推演。</p>
+</div>
+<div class="ko-why-tile">
+<div class="ko-why-tile-title">历史先例可参考</div>
+<p class="ko-why-tile-body">类似的宏观冲击（石油危机、加息周期等）有丰富的历史案例可供类比。</p>
+</div>
+
+</div>
+</article>
+
+<article class="ko-finding-card ko-bad">
+<div class="ko-finding-head">
+<span class="ko-finding-tag">共性瓶颈</span>
+<span class="ko-finding-en">COMMON BOTTLENECK</span>
+</div>
+<p class="ko-finding-headline">在需要精确最新季度财报数据和跨公司交叉验证的查询中，模型间分化最为显著。时效性和定量精度成为关键瓶颈。</p>
+<div class="ko-query-callout">
+<div class="ko-query-cap">
+<span class="ko-cap-label">Representative Query</span>
+<span class="ko-cap-id">Q91</span>
+</div>
+<p class="ko-query-body">2025年，阿迪达斯创纪录的营收与疲软的利润指引引发抛售，近期（2026年初）美元急剧反弹更加剧了汇率逆风担忧。请回溯公司过去八个季度（自2025年第四季度起）的业绩指引与实际达成偏差，量化评估管理层对汇兑损失的预测是否存在系统性低估？结合2026年初外汇对冲比例与当前美元走势，该历史偏差将如何重塑其年内营业利润率的演变路径？</p>
+<p class="ko-query-metric">6 模型 Synthesis 均值 <strong>6.64</strong>，Factuality 均值 <strong>58.6%</strong>，极差 <strong>0.88</strong>。</p>
+</div>
+<h3 class="ko-sub-heading">各模型在该 Query 的回答摘要</h3>
+<p class="ko-sub-note">按 Synthesis 分数降序。MiroThinker 以紫色色条标注。</p>
+<div class="ko-model-grid">
+<div class="ko-model-tile">
+<div class="ko-tile-head">
+<span class="ko-tile-name">Gemini</span>
+</div>
+<div class="ko-tile-scores">
+<span>Proc <b>5.9</b></span>
+<span>Synth <b>7.15</b></span>
+<span>Fact <b>58%</b></span>
+</div>
+<p class="ko-tile-summary">Synthesis 7.15，Coverage 7.6，在该查询上表现中规中矩，fact 58%。</p>
+</div>
+<div class="ko-model-tile is-miro">
+<div class="ko-tile-head">
+<span class="ko-tile-name">MiroThinker v17</span>
+</div>
+<div class="ko-tile-scores">
+<span>Proc <b>6.4</b></span>
+<span>Synth <b>6.90</b></span>
+<span>Fact <b>65%</b></span>
+</div>
+<p class="ko-tile-summary">Synthesis 6.90，Coverage 6.6，该查询上表现相对吃力，fact 65%。</p>
+</div>
+<div class="ko-model-tile is-miro">
+<div class="ko-tile-head">
+<span class="ko-tile-name">MiroThinker v17 Mini</span>
+</div>
+<div class="ko-tile-scores">
+<span>Proc <b>6.1</b></span>
+<span>Synth <b>6.74</b></span>
+<span>Fact <b>63%</b></span>
+</div>
+<p class="ko-tile-summary">Synthesis 6.74，Coverage 6.3，该查询上表现相对吃力，fact 63%。</p>
+</div>
+<div class="ko-model-tile">
+<div class="ko-tile-head">
+<span class="ko-tile-name">Claude</span>
+</div>
+<div class="ko-tile-scores">
+<span>Proc <b>5.9</b></span>
+<span>Synth <b>6.51</b></span>
+<span>Fact <b>59%</b></span>
+</div>
+<p class="ko-tile-summary">Synthesis 6.51，Coverage 6.7，该查询上表现相对吃力，fact 59%。</p>
+</div>
+<div class="ko-model-tile">
+<div class="ko-tile-head">
+<span class="ko-tile-name">GLM Turbo</span>
+</div>
+<div class="ko-tile-scores">
+<span>Proc <b>0.0</b></span>
+<span>Synth <b>6.28</b></span>
+<span>Fact <b>49%</b></span>
+</div>
+<p class="ko-tile-summary">Synthesis 6.28，Coverage 6.0，该查询上表现相对吃力，fact 49%。</p>
+</div>
+<div class="ko-model-tile">
+<div class="ko-tile-head">
+<span class="ko-tile-name">GPT</span>
+</div>
+<div class="ko-tile-scores">
+<span>Proc <b>7.4</b></span>
+<span>Synth <b>6.27</b></span>
+<span>Fact <b>58%</b></span>
+</div>
+<p class="ko-tile-summary">Synthesis 6.27，Coverage 5.4，该查询上表现相对吃力，fact 58%。</p>
+</div>
+
+</div>
+<h3 class="ko-sub-heading">为什么 6 个模型都做不好？</h3>
+<div class="ko-why-grid">
+<div class="ko-why-tile">
+<div class="ko-why-tile-title">季报数据极度时效性</div>
+<p class="ko-why-tile-body">涉及 2025 Q3/Q4 的最新季报数据，模型训练数据可能尚未覆盖。</p>
+</div>
+<div class="ko-why-tile">
+<div class="ko-why-tile-title">精确数字要求高</div>
+<p class="ko-why-tile-body">营收增速、净息差、自由现金流等具体数字错误会导致整个分析链条失效。</p>
+</div>
+<div class="ko-why-tile">
+<div class="ko-why-tile-title">跨公司对比复杂</div>
+<p class="ko-why-tile-body">需要同时追踪多家公司的多个财务指标并进行交叉验证，数据量大且维度多。</p>
+</div>
+<div class="ko-why-tile">
+<div class="ko-why-tile-title">隐含假设难捕捉</div>
+<p class="ko-why-tile-body">管理层指引的可信度评估需要结合历史偏差模式，这类隐性知识在公开语料中较为分散。</p>
+</div>
+
+</div>
+</article>
+
+</div>
+</div>
+
+<div class="ribbon-divider"><span class="ribbon-line"></span><span class="ribbon-dot"></span><span class="ribbon-line"></span></div>
+
+<div class="persona-intro-section">
+<span class="overline">Query Taxonomy</span>
+<h2>Query 类型概要</h2>
+<p class="persona-insight">投资经理/金融分析师角色要求模型具备<strong>多维度市场分析能力</strong>——不仅要准确提取和交叉验证最新财务数据，还需要在宏观经济趋势、行业周期、监管政策变化等多个维度之间建立因果关系，并最终转化为具体可操作的投资建议。</p>
+<h3>问题类型</h3>
+<div class="qtype-grid">
+<div class="qtype-card">
+<div class="qtype-head">
+<span class="qtype-name">信号解读与冲突调和</span>
+<span class="qtype-en">Signal Interpretation & Reconciliation</span>
+</div>
+<p class="qtype-desc">在宏观与微观矛盾信号间建立一致性框架，识别市场共识与实际数据的偏差</p>
+</div>
+<div class="qtype-card">
+<div class="qtype-head">
+<span class="qtype-name">财报交叉验证</span>
+<span class="qtype-en">Financial Cross-Validation</span>
+</div>
+<p class="qtype-desc">提取多家公司跨季度财务数据，进行指标联动分析和趋势外推</p>
+</div>
+<div class="qtype-card">
+<div class="qtype-head">
+<span class="qtype-name">监管与合规分析</span>
+<span class="qtype-en">Regulatory & Compliance Analysis</span>
+</div>
+<p class="qtype-desc">追踪监管政策变化，评估其对行业竞争格局和企业合规成本的实质影响</p>
+</div>
+<div class="qtype-card">
+<div class="qtype-head">
+<span class="qtype-name">投资组合构建</span>
+<span class="qtype-en">Portfolio Construction</span>
+</div>
+<p class="qtype-desc">基于产业链分析和估值模型，给出具体的投资建议与风控方案</p>
+</div>
+<div class="qtype-card">
+<div class="qtype-head">
+<span class="qtype-name">跨市场宏观推演</span>
+<span class="qtype-en">Cross-market Macro Reasoning</span>
+</div>
+<p class="qtype-desc">从宏观事件（地缘冲突、气候变化等）推演到具体投资品种的传导链</p>
+</div>
+
+</div>
+<h3>难度机制</h3>
+<div class="diff-grid">
+<div class="diff-card">
+<div class="diff-head">
+<span class="diff-name">数据时效性极强</span>
+</div>
+<p class="diff-desc">涉及最新季度财报、政策变动、即期汇率等时效性极强的数据，需要精确的实时信息检索</p>
+</div>
+<div class="diff-card">
+<div class="diff-head">
+<span class="diff-name">多维度联动分析</span>
+</div>
+<p class="diff-desc">需要在宏观经济、行业周期、公司财务、监管政策等多个维度间建立因果传导链</p>
+</div>
+<div class="diff-card">
+<div class="diff-head">
+<span class="diff-name">定量精度要求高</span>
+</div>
+<p class="diff-desc">具体的财务数据（营收增速、毛利率、自由现金流等）必须准确，任何错误都可能导致错误结论</p>
+</div>
+<div class="diff-card">
+<div class="diff-head">
+<span class="diff-name">矛盾信号调和</span>
+</div>
+<p class="diff-desc">市场常出现宏观与微观矛盾的信号，模型需要识别并解释这种表面上的不一致</p>
+</div>
+<div class="diff-card">
+<div class="diff-head">
+<span class="diff-name">可操作性要求</span>
+</div>
+<p class="diff-desc">分析最终需要转化为具体可操作的投资建议（仓位、品种、时机），而非泛泛而谈</p>
+</div>
+<div class="diff-card">
+<div class="diff-head">
+<span class="diff-name">监管不确定性</span>
+</div>
+<p class="diff-desc">政策变化（SEC 执法方向、出口管制等）具有高度不确定性，模型需要在不确定性中给出有条件的判断</p>
+</div>
+
+</div>
+</div>
+
+<div class="ribbon-divider"><span class="ribbon-line"></span><span class="ribbon-dot"></span><span class="ribbon-line"></span></div>
+
+<div class="tab-container">
+<div class="tab-buttons">
+<button class="tab-btn active" onclick="switchTab(0)">Q89</button>
+<button class="tab-btn" onclick="switchTab(1)">Q90</button>
+<button class="tab-btn" onclick="switchTab(2)">Q91</button>
+<button class="tab-btn" onclick="switchTab(3)">Q92</button>
+<button class="tab-btn" onclick="switchTab(4)">Q93</button>
+<button class="tab-btn" onclick="switchTab(5)">Q94</button>
+<button class="tab-btn" onclick="switchTab(6)">Q95</button>
+<button class="tab-btn" onclick="switchTab(7)">Q96</button>
+<button class="tab-btn" onclick="switchTab(8)">Q97</button>
+<button class="tab-btn" onclick="switchTab(9)">Q98</button>
+<button class="tab-btn" onclick="switchTab(10)">Q99</button>
+<button class="tab-btn" onclick="switchTab(11)">Q100</button>
+<button class="tab-btn" onclick="switchTab(12)">Q101</button>
+<button class="tab-btn" onclick="switchTab(13)">Q103</button>
+<button class="tab-btn" onclick="switchTab(14)">Q108</button>
+
+</div>
+<div class="tab-content active" id="tab-0">
+<div class="card">
+<details class="query-details">
+<summary>
+<span class="query-summary-label">Query #89</span>
+<span class="query-summary-hint">点击展开原始查询</span>
+<span class="query-summary-chevron">›</span>
+</summary>
+<pre class="query-text">2025年三季度对冲基金削减科技七巨头引发了资金撤离的宏观共识，但微观层面却出现矛盾信号：Jensen投资管理公司逆势新建了2.617亿美元的亚马逊仓位，13F报告也显示资金正向微软和奈飞进行轮动。如何调和这一特定窗口期的证据分歧？顶尖机构在巨头间的内部轮动，究竟是押注AI资本支出的回报拐点，还是应对宏观不确定性的防御性避险？当前的市场定价是否已经充分消化了这种底层的资金置换逻辑？</pre>
+</details>
+<div class="db-card">
+<div class="db-header">
+<span class="overline">Score Distribution</span>
+<h4>各维度模型得分分布</h4>
+<p class="db-hint">每个维度上，各模型的得分点位。
+<span class="db-legend-dot db-legend-miro"></span>MiroThinker
+<span class="db-legend-dot db-legend-other"></span>Other models</p>
+</div>
+<div class="db-grid">
+<div class="db-row">
+<span class="db-label">Process</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:4"><span class="db-connector"></span><span class="db-name">GPT 7.5</span></span>
+<span class="db-dot db-dot-miro" style="left:90.0%;--row:3"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.4</span></span>
+<span class="db-dot db-dot-miro" style="left:86.0%;--row:2"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 7.2</span></span>
+<span class="db-dot" style="left:82.0%;--row:1"><span class="db-connector"></span><span class="db-name">Gemini 7.1</span></span>
+<span class="db-dot" style="left:74.0%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 6.9</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 4.8</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Synthesis</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:49.5%;--row:2"><span class="db-connector"></span><span class="db-name">GPT 7.0</span></span>
+<span class="db-dot db-dot-miro" style="left:46.1%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.0</span></span>
+<span class="db-dot db-dot-miro" style="left:22.1%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 6.8</span></span>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 7.5</span></span>
+<span class="db-dot" style="left:40.4%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 6.9</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 6.6</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Factuality</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 80.0</span></span>
+<span class="db-dot db-dot-miro" style="left:60.4%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 67.7</span></span>
+<span class="db-dot db-dot-miro" style="left:28.6%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 56.0</span></span>
+<span class="db-dot" style="left:32.9%;--row:1"><span class="db-connector"></span><span class="db-name">Gemini 57.6</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 47.7</span></span>
+<span class="db-dot" style="left:64.6%;--row:1"><span class="db-connector"></span><span class="db-name">GLM 69.2</span></span>
+
+</div></div>
+</div>
+</div>
+</div>
+<h3>Process Evaluation Details</h3>
+<table class="score-table">
+<thead><tr><th>Model</th><th>Search Breadth</th><th>Analytical Depth</th><th>Progressive Refinement</th><th>Critical Thinking</th><th>Efficiency</th><th>Findings→Synthesis</th><th>Synthesis→Process</th><th>Contradiction</th></tr></thead>
+<tbody>
+<tr><td><strong>GPT</strong></td><td>7</td><td>7</td><td>8</td><td>8</td><td>6</td><td>8</td><td>7</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17</strong></td><td>8</td><td>6</td><td>7</td><td>7</td><td>6</td><td>9</td><td>7</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17 Mini</strong></td><td>8</td><td>6</td><td>8</td><td>8</td><td>6</td><td>8</td><td>6</td><td>8</td></tr>
+<tr><td><strong>Gemini</strong></td><td>8</td><td>7</td><td>8</td><td>6</td><td>5</td><td>9</td><td>6</td><td>8</td></tr>
+<tr><td><strong>Claude</strong></td><td>8</td><td>7</td><td>8</td><td>8</td><td>6</td><td>8</td><td>4</td><td>6</td></tr>
+<tr><td><strong>GLM Turbo</strong></td><td>7</td><td>2</td><td>5</td><td>6</td><td>4</td><td>7</td><td>3</td><td>4</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+<div class="tab-content" id="tab-1">
+<div class="card">
+<details class="query-details">
+<summary>
+<span class="query-summary-label">Query #90</span>
+<span class="query-summary-hint">点击展开原始查询</span>
+<span class="query-summary-chevron">›</span>
+</summary>
+<pre class="query-text">2025财年第四季度，英伟达抛出万亿美元AI需求指引，市场却因担忧数据中心进入气穴消化期而持续抛售AMD与美光等产业链标的。请提取北美核心云厂商2025年第四季度季报的资本开支环比增速与下期指引，并交叉比对AMD、美光2025年第四季度财报中数据中心业务的库存周转天数走势。这些数据表明，长期宏大预期与短期产能消化间的错配是在加速恶化还是已现收窄端倪？</pre>
+</details>
+<div class="db-card">
+<div class="db-header">
+<span class="overline">Score Distribution</span>
+<h4>各维度模型得分分布</h4>
+<p class="db-hint">每个维度上，各模型的得分点位。
+<span class="db-legend-dot db-legend-miro"></span>MiroThinker
+<span class="db-legend-dot db-legend-other"></span>Other models</p>
+</div>
+<div class="db-grid">
+<div class="db-row">
+<span class="db-label">Process</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 7.9</span></span>
+<span class="db-dot db-dot-miro" style="left:70.8%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.2</span></span>
+<span class="db-dot db-dot-miro" style="left:10.6%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 5.6</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 5.5</span></span>
+<span class="db-dot" style="left:24.5%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 6.0</span></span>
+<span class="db-dot" style="left:52.3%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 6.8</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Synthesis</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:50.9%;--row:3"><span class="db-connector"></span><span class="db-name">GPT 7.3</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.9</span></span>
+<span class="db-dot db-dot-miro db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 6.8</span></span>
+<span class="db-dot" style="left:38.3%;--row:1"><span class="db-connector"></span><span class="db-name">Gemini 7.2</span></span>
+<span class="db-dot" style="left:41.2%;--row:2"><span class="db-connector"></span><span class="db-name">Claude 7.2</span></span>
+<span class="db-dot" style="left:27.8%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 7.1</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Factuality</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:61.7%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 69.2</span></span>
+<span class="db-dot db-dot-miro" style="left:63.3%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT v17 69.7</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 78.8</span></span>
+<span class="db-dot" style="left:37.1%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 61.9</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 52.6</span></span>
+<span class="db-dot" style="left:21.1%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 57.1</span></span>
+
+</div></div>
+</div>
+</div>
+</div>
+<h3>Process Evaluation Details</h3>
+<table class="score-table">
+<thead><tr><th>Model</th><th>Search Breadth</th><th>Analytical Depth</th><th>Progressive Refinement</th><th>Critical Thinking</th><th>Efficiency</th><th>Findings→Synthesis</th><th>Synthesis→Process</th><th>Contradiction</th></tr></thead>
+<tbody>
+<tr><td><strong>GPT</strong></td><td>8</td><td>7</td><td>8</td><td>8</td><td>7</td><td>9</td><td>7</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17</strong></td><td>7</td><td>6</td><td>8</td><td>8</td><td>6</td><td>8</td><td>6</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17 Mini</strong></td><td>8</td><td>5</td><td>7</td><td>8</td><td>5</td><td>6</td><td>3</td><td>3</td></tr>
+<tr><td><strong>Gemini</strong></td><td>7</td><td>6</td><td>7</td><td>6</td><td>5</td><td>6</td><td>4</td><td>3</td></tr>
+<tr><td><strong>Claude</strong></td><td>8</td><td>6</td><td>7</td><td>8</td><td>5</td><td>6</td><td>3</td><td>5</td></tr>
+<tr><td><strong>GLM Turbo</strong></td><td>7</td><td>6</td><td>7</td><td>6</td><td>5</td><td>8</td><td>6</td><td>9</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+<div class="tab-content" id="tab-2">
+<div class="card">
+<details class="query-details">
+<summary>
+<span class="query-summary-label">Query #91</span>
+<span class="query-summary-hint">点击展开原始查询</span>
+<span class="query-summary-chevron">›</span>
+</summary>
+<pre class="query-text">2025年，阿迪达斯创纪录的营收与疲软的利润指引引发抛售，近期（2026年初）美元急剧反弹更加剧了汇率逆风担忧。请回溯公司过去八个季度（自2025年第四季度起）的业绩指引与实际达成偏差，量化评估管理层对汇兑损失的预测是否存在系统性低估？结合2026年初外汇对冲比例与当前美元走势，该历史偏差将如何重塑其年内营业利润率的演变路径？</pre>
+</details>
+<div class="db-card">
+<div class="db-header">
+<span class="overline">Score Distribution</span>
+<h4>各维度模型得分分布</h4>
+<p class="db-hint">每个维度上，各模型的得分点位。
+<span class="db-legend-dot db-legend-miro"></span>MiroThinker
+<span class="db-legend-dot db-legend-other"></span>Other models</p>
+</div>
+<div class="db-grid">
+<div class="db-row">
+<span class="db-label">Process</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 7.4</span></span>
+<span class="db-dot db-dot-miro" style="left:35.3%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 6.4</span></span>
+<span class="db-dot db-dot-miro" style="left:20.7%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 6.1</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 5.9</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:1"><span class="db-connector"></span><span class="db-name">Claude 5.9</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Synthesis</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 6.3</span></span>
+<span class="db-dot db-dot-miro" style="left:68.8%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 6.9</span></span>
+<span class="db-dot db-dot-miro" style="left:52.7%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 6.7</span></span>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 7.2</span></span>
+<span class="db-dot" style="left:29.4%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 6.5</span></span>
+<span class="db-dot db-edge-left" style="left:6.6%;--row:1"><span class="db-connector"></span><span class="db-name">GLM 6.3</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Factuality</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:53.9%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 57.6</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT v17 64.7</span></span>
+<span class="db-dot db-dot-miro" style="left:84.1%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 63.0</span></span>
+<span class="db-dot" style="left:57.2%;--row:1"><span class="db-connector"></span><span class="db-name">Gemini 58.2</span></span>
+<span class="db-dot" style="left:60.1%;--row:2"><span class="db-connector"></span><span class="db-name">Claude 58.7</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 49.2</span></span>
+
+</div></div>
+</div>
+</div>
+</div>
+<h3>Process Evaluation Details</h3>
+<table class="score-table">
+<thead><tr><th>Model</th><th>Search Breadth</th><th>Analytical Depth</th><th>Progressive Refinement</th><th>Critical Thinking</th><th>Efficiency</th><th>Findings→Synthesis</th><th>Synthesis→Process</th><th>Contradiction</th></tr></thead>
+<tbody>
+<tr><td><strong>GPT</strong></td><td>7</td><td>6</td><td>8</td><td>7</td><td>6</td><td>9</td><td>7</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17</strong></td><td>7</td><td>5</td><td>7</td><td>8</td><td>5</td><td>7</td><td>5</td><td>7</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17 Mini</strong></td><td>8</td><td>5</td><td>7</td><td>8</td><td>4</td><td>7</td><td>4</td><td>6</td></tr>
+<tr><td><strong>Gemini</strong></td><td>6</td><td>5</td><td>7</td><td>7</td><td>6</td><td>7</td><td>5</td><td>4</td></tr>
+<tr><td><strong>Claude</strong></td><td>7</td><td>5</td><td>6</td><td>7</td><td>5</td><td>7</td><td>4</td><td>6</td></tr>
+<tr><td><strong>GLM Turbo</strong></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+<div class="tab-content" id="tab-3">
+<div class="card">
+<details class="query-details">
+<summary>
+<span class="query-summary-label">Query #92</span>
+<span class="query-summary-hint">点击展开原始查询</span>
+<span class="query-summary-chevron">›</span>
+</summary>
+<pre class="query-text">市场普遍押注新政府的全面去监管将致使金融机构合规成本断崖式下降，但2026年初SEC针对《营销规则》的首罚与OFAC的密集制裁释放了强烈的定向打击信号。提取Coinbase与头部另类资管机构（如Blackstone）2025年第三季度和第四季度的财报数据，其非利息支出中法务与合规相关费用的实际走势及最新指引，是否印证了成本崩塌的初期共识？结合SEC与CFTC新签的联合备忘录，这种结构性分化的监管对上述机构未来利润率的扩张路径会产生怎样的扰动？触发其合规支出趋势反转的核心催化剂可能是什么？</pre>
+</details>
+<div class="db-card">
+<div class="db-header">
+<span class="overline">Score Distribution</span>
+<h4>各维度模型得分分布</h4>
+<p class="db-hint">每个维度上，各模型的得分点位。
+<span class="db-legend-dot db-legend-miro"></span>MiroThinker
+<span class="db-legend-dot db-legend-other"></span>Other models</p>
+</div>
+<div class="db-grid">
+<div class="db-row">
+<span class="db-label">Process</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 8.0</span></span>
+<span class="db-dot db-dot-miro" style="left:44.5%;--row:4"><span class="db-connector"></span><span class="db-name is-miro">MT v17 6.9</span></span>
+<span class="db-dot db-dot-miro" style="left:11.5%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 6.1</span></span>
+<span class="db-dot" style="left:33.5%;--row:3"><span class="db-connector"></span><span class="db-name">Gemini 6.6</span></span>
+<span class="db-dot" style="left:22.5%;--row:2"><span class="db-connector"></span><span class="db-name">Claude 6.4</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 6.0</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Synthesis</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:68.8%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 7.5</span></span>
+<span class="db-dot db-dot-miro" style="left:89.8%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.8</span></span>
+<span class="db-dot db-dot-miro" style="left:91.2%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 7.8</span></span>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:2"><span class="db-connector"></span><span class="db-name">Gemini 7.9</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 6.4</span></span>
+<span class="db-dot" style="left:74.5%;--row:1"><span class="db-connector"></span><span class="db-name">GLM 7.5</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Factuality</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:91.7%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 75.0</span></span>
+<span class="db-dot db-dot-miro" style="left:48.1%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 64.4</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 75.6</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 54.2</span></span>
+<span class="db-dot" style="left:50.4%;--row:1"><span class="db-connector"></span><span class="db-name">Claude 65.0</span></span>
+<span class="db-dot" style="left:8.6%;--row:1"><span class="db-connector"></span><span class="db-name">GLM 54.9</span></span>
+
+</div></div>
+</div>
+</div>
+</div>
+<h3>Process Evaluation Details</h3>
+<table class="score-table">
+<thead><tr><th>Model</th><th>Search Breadth</th><th>Analytical Depth</th><th>Progressive Refinement</th><th>Critical Thinking</th><th>Efficiency</th><th>Findings→Synthesis</th><th>Synthesis→Process</th><th>Contradiction</th></tr></thead>
+<tbody>
+<tr><td><strong>GPT</strong></td><td>8</td><td>7</td><td>8</td><td>9</td><td>7</td><td>9</td><td>7</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17</strong></td><td>7</td><td>6</td><td>8</td><td>8</td><td>6</td><td>7</td><td>6</td><td>7</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17 Mini</strong></td><td>8</td><td>4</td><td>7</td><td>8</td><td>5</td><td>7</td><td>4</td><td>6</td></tr>
+<tr><td><strong>Gemini</strong></td><td>7</td><td>6</td><td>7</td><td>7</td><td>6</td><td>8</td><td>5</td><td>7</td></tr>
+<tr><td><strong>Claude</strong></td><td>8</td><td>6</td><td>7</td><td>7</td><td>6</td><td>7</td><td>4</td><td>6</td></tr>
+<tr><td><strong>GLM Turbo</strong></td><td>4</td><td>6</td><td>5</td><td>6</td><td>6</td><td>8</td><td>5</td><td>8</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+<div class="tab-content" id="tab-4">
+<div class="card">
+<details class="query-details">
+<summary>
+<span class="query-summary-label">Query #93</span>
+<span class="query-summary-hint">点击展开原始查询</span>
+<span class="query-summary-chevron">›</span>
+</summary>
+<pre class="query-text">2025财年，SEC在Atkins治下将执法总数削减且大幅推迟做空报告规则，市场普遍预期合规压力单边下降，但近期针对营销规则的首起精准执法及跨境特别工作组的新设似乎打破了这一共识。查阅头部合规科技公司（如Clearwater Analytics或Enfusion）2025年第四季度季报，其特定模块（如营销审核或跨境数据合规）的营收增速与整体业务增速相比，走势是否正在加速分化？同时，结合大型另类资管机构2025年第四季度的法律合规费用拨备及利润率指引，这种宏观放松叠加微观精准打击的新型监管环境，是否正在导致我们传统的合规成本与宏观执法数量线性挂钩分析框架走向失效？</pre>
+</details>
+<div class="db-card">
+<div class="db-header">
+<span class="overline">Score Distribution</span>
+<h4>各维度模型得分分布</h4>
+<p class="db-hint">每个维度上，各模型的得分点位。
+<span class="db-legend-dot db-legend-miro"></span>MiroThinker
+<span class="db-legend-dot db-legend-other"></span>Other models</p>
+</div>
+<div class="db-grid">
+<div class="db-row">
+<span class="db-label">Process</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:1"><span class="db-connector"></span><span class="db-name">GPT 7.4</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 5.5</span></span>
+<span class="db-dot" style="left:88.1%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 7.2</span></span>
+<span class="db-dot" style="left:52.9%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 6.5</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Synthesis</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:72.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 7.1</span></span>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 7.2</span></span>
+<span class="db-dot" style="left:17.3%;--row:1"><span class="db-connector"></span><span class="db-name">Claude 6.6</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 6.6</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Factuality</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 75.0</span></span>
+<span class="db-dot" style="left:32.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 54.3</span></span>
+<span class="db-dot" style="left:78.1%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 69.7</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 45.6</span></span>
+
+</div></div>
+</div>
+</div>
+</div>
+<h3>Process Evaluation Details</h3>
+<table class="score-table">
+<thead><tr><th>Model</th><th>Search Breadth</th><th>Analytical Depth</th><th>Progressive Refinement</th><th>Critical Thinking</th><th>Efficiency</th><th>Findings→Synthesis</th><th>Synthesis→Process</th><th>Contradiction</th></tr></thead>
+<tbody>
+<tr><td><strong>GPT</strong></td><td>7</td><td>6</td><td>8</td><td>7</td><td>6</td><td>9</td><td>7</td><td>9</td></tr>
+<tr><td><strong>Gemini</strong></td><td>7</td><td>5</td><td>6</td><td>6</td><td>4</td><td>7</td><td>4</td><td>5</td></tr>
+<tr><td><strong>Claude</strong></td><td>8</td><td>6</td><td>7</td><td>8</td><td>6</td><td>8</td><td>6</td><td>9</td></tr>
+<tr><td><strong>GLM Turbo</strong></td><td>8</td><td>6</td><td>7</td><td>7</td><td>5</td><td>8</td><td>5</td><td>6</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+<div class="tab-content" id="tab-5">
+<div class="card">
+<details class="query-details">
+<summary>
+<span class="query-summary-label">Query #94</span>
+<span class="query-summary-hint">点击展开原始查询</span>
+<span class="query-summary-chevron">›</span>
+</summary>
+<pre class="query-text">2025财年第四季度，Symbotic面临SEC调查、审计师否定意见及大客户沃尔玛设定的成本支付上限，管理层仍维持高增长叙事。请对比Symbotic2025年第三季度和第四季度的核心财务数据，2025年第四季度季报显示其自由现金流与真实毛利率的走势是否在加速分化？结合最新披露的积压订单转化节奏，大客户成本约束对其实际营收确认的压制效应有多大？</pre>
+</details>
+<div class="db-card">
+<div class="db-header">
+<span class="overline">Score Distribution</span>
+<h4>各维度模型得分分布</h4>
+<p class="db-hint">每个维度上，各模型的得分点位。
+<span class="db-legend-dot db-legend-miro"></span>MiroThinker
+<span class="db-legend-dot db-legend-other"></span>Other models</p>
+</div>
+<div class="db-grid">
+<div class="db-row">
+<span class="db-label">Process</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 7.8</span></span>
+<span class="db-dot db-dot-miro" style="left:60.2%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.1</span></span>
+<span class="db-dot db-dot-miro" style="left:73.7%;--row:2"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 7.4</span></span>
+<span class="db-dot" style="left:46.6%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 6.9</span></span>
+<span class="db-dot" style="left:66.9%;--row:1"><span class="db-connector"></span><span class="db-name">Claude 7.2</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 6.1</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Synthesis</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 8.0</span></span>
+<span class="db-dot db-dot-miro" style="left:73.6%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.6</span></span>
+<span class="db-dot db-dot-miro" style="left:55.6%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 7.2</span></span>
+<span class="db-dot" style="left:68.9%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 7.5</span></span>
+<span class="db-dot" style="left:24.5%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 6.6</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 6.2</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Factuality</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 55.3</span></span>
+<span class="db-dot db-dot-miro" style="left:37.6%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 67.5</span></span>
+<span class="db-dot db-dot-miro" style="left:37.6%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 67.5</span></span>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 89.4</span></span>
+<span class="db-dot" style="left:47.7%;--row:3"><span class="db-connector"></span><span class="db-name">Claude 71.4</span></span>
+<span class="db-dot" style="left:44.4%;--row:2"><span class="db-connector"></span><span class="db-name">GLM 70.2</span></span>
+
+</div></div>
+</div>
+</div>
+</div>
+<h3>Process Evaluation Details</h3>
+<table class="score-table">
+<thead><tr><th>Model</th><th>Search Breadth</th><th>Analytical Depth</th><th>Progressive Refinement</th><th>Critical Thinking</th><th>Efficiency</th><th>Findings→Synthesis</th><th>Synthesis→Process</th><th>Contradiction</th></tr></thead>
+<tbody>
+<tr><td><strong>GPT</strong></td><td>7</td><td>8</td><td>8</td><td>7</td><td>7</td><td>9</td><td>7</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17</strong></td><td>7</td><td>7</td><td>8</td><td>7</td><td>6</td><td>8</td><td>6</td><td>8</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17 Mini</strong></td><td>7</td><td>8</td><td>8</td><td>7</td><td>7</td><td>8</td><td>6</td><td>8</td></tr>
+<tr><td><strong>Gemini</strong></td><td>7</td><td>6</td><td>7</td><td>7</td><td>6</td><td>8</td><td>6</td><td>8</td></tr>
+<tr><td><strong>Claude</strong></td><td>8</td><td>7</td><td>7</td><td>7</td><td>6</td><td>9</td><td>6</td><td>8</td></tr>
+<tr><td><strong>GLM Turbo</strong></td><td>7</td><td>5</td><td>6</td><td>6</td><td>4</td><td>8</td><td>5</td><td>8</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+<div class="tab-content" id="tab-6">
+<div class="card">
+<details class="query-details">
+<summary>
+<span class="query-summary-label">Query #95</span>
+<span class="query-summary-hint">点击展开原始查询</span>
+<span class="query-summary-chevron">›</span>
+</summary>
+<pre class="query-text">2026年初，NICE等垂直SaaS公司近期在财报中强调AI不仅没有颠覆其业务，反而成为ARR增长的核心引擎，但这与市场因担忧Anthropic等大模型替代效应而引发的软件板块恐慌性抛售形成鲜明对比。提取2025年6月-2025年12月NICE及同类头部垂直SaaS公司的AI相关研发岗位招聘趋势，以及核心产品API调用频次或B端网页端流量的另类数据，这些底层数据是否真实支撑了管理层关于AI深度融入客户专有工作流的乐观叙事？结合目前板块内出现的极端收益分化现象，基于上述另类数据与2025年第四季度的净收入留存率走势，预判未来两个季度这类垂直SaaS的远期估值倍数会加速修复还是面临更深度的重估？</pre>
+</details>
+<div class="db-card">
+<div class="db-header">
+<span class="overline">Score Distribution</span>
+<h4>各维度模型得分分布</h4>
+<p class="db-hint">每个维度上，各模型的得分点位。
+<span class="db-legend-dot db-legend-miro"></span>MiroThinker
+<span class="db-legend-dot db-legend-other"></span>Other models</p>
+</div>
+<div class="db-grid">
+<div class="db-row">
+<span class="db-label">Process</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:17.0%;--row:1"><span class="db-connector"></span><span class="db-name">GPT 5.8</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 6.6</span></span>
+<span class="db-dot db-dot-miro" style="left:72.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 6.4</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 5.6</span></span>
+<span class="db-dot" style="left:72.0%;--row:1"><span class="db-connector"></span><span class="db-name">Claude 6.4</span></span>
+<span class="db-dot" style="left:17.0%;--row:2"><span class="db-connector"></span><span class="db-name">GLM 5.8</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Synthesis</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 5.7</span></span>
+<span class="db-dot db-dot-miro" style="left:89.1%;--row:2"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.1</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:3"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 7.2</span></span>
+<span class="db-dot" style="left:85.4%;--row:1"><span class="db-connector"></span><span class="db-name">Gemini 7.1</span></span>
+<span class="db-dot" style="left:80.0%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 7.0</span></span>
+<span class="db-dot" style="left:66.5%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 6.7</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Factuality</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 36.0</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:4"><span class="db-connector"></span><span class="db-name is-miro">MT v17 48.3</span></span>
+<span class="db-dot db-dot-miro" style="left:73.8%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 45.5</span></span>
+<span class="db-dot" style="left:90.5%;--row:3"><span class="db-connector"></span><span class="db-name">Gemini 47.8</span></span>
+<span class="db-dot" style="left:83.5%;--row:1"><span class="db-connector"></span><span class="db-name">Claude 46.8</span></span>
+<span class="db-dot" style="left:84.5%;--row:2"><span class="db-connector"></span><span class="db-name">GLM 47.0</span></span>
+
+</div></div>
+</div>
+</div>
+</div>
+<h3>Process Evaluation Details</h3>
+<table class="score-table">
+<thead><tr><th>Model</th><th>Search Breadth</th><th>Analytical Depth</th><th>Progressive Refinement</th><th>Critical Thinking</th><th>Efficiency</th><th>Findings→Synthesis</th><th>Synthesis→Process</th><th>Contradiction</th></tr></thead>
+<tbody>
+<tr><td><strong>GPT</strong></td><td>7</td><td>5</td><td>8</td><td>8</td><td>6</td><td>6</td><td>3</td><td>3</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17</strong></td><td>7</td><td>5</td><td>7</td><td>7</td><td>6</td><td>8</td><td>6</td><td>7</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17 Mini</strong></td><td>8</td><td>4</td><td>7</td><td>6</td><td>5</td><td>8</td><td>6</td><td>7</td></tr>
+<tr><td><strong>Gemini</strong></td><td>7</td><td>5</td><td>7</td><td>7</td><td>5</td><td>7</td><td>4</td><td>3</td></tr>
+<tr><td><strong>Claude</strong></td><td>8</td><td>6</td><td>7</td><td>7</td><td>5</td><td>7</td><td>4</td><td>7</td></tr>
+<tr><td><strong>GLM Turbo</strong></td><td>8</td><td>5</td><td>7</td><td>7</td><td>5</td><td>7</td><td>4</td><td>3</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+<div class="tab-content" id="tab-7">
+<div class="card">
+<details class="query-details">
+<summary>
+<span class="query-summary-label">Query #96</span>
+<span class="query-summary-hint">点击展开原始查询</span>
+<span class="query-summary-chevron">›</span>
+</summary>
+<pre class="query-text">市场曾预期2025年11月安世半导体获得的出口豁免实质性解除了车用芯片断链风险，但智库信号暗示底层博弈逻辑正发生反转。请梳理闻泰科技及海外核心车规芯片大厂2025年第四季度的财报。2025年第四季度季报显示，安世的海外营收增速与毛利率走势是否在加速分化？结合美国同业2025年第四季度的在华收入指引与库存周转天数，这是否印证了豁免仅是脱钩前的战术性筹码重估？基于这些早期财务信号如何预判全球车用半导体利润池的演变路径？</pre>
+</details>
+<div class="db-card">
+<div class="db-header">
+<span class="overline">Score Distribution</span>
+<h4>各维度模型得分分布</h4>
+<p class="db-hint">每个维度上，各模型的得分点位。
+<span class="db-legend-dot db-legend-miro"></span>MiroThinker
+<span class="db-legend-dot db-legend-other"></span>Other models</p>
+</div>
+<div class="db-grid">
+<div class="db-row">
+<span class="db-label">Process</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 7.5</span></span>
+<span class="db-dot db-dot-miro" style="left:19.5%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 6.1</span></span>
+<span class="db-dot db-dot-miro db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 5.9</span></span>
+<span class="db-dot" style="left:33.1%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 6.4</span></span>
+<span class="db-dot" style="left:33.1%;--row:1"><span class="db-connector"></span><span class="db-name">Claude 6.4</span></span>
+<span class="db-dot" style="left:39.8%;--row:2"><span class="db-connector"></span><span class="db-name">GLM 6.5</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Synthesis</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:25.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 6.5</span></span>
+<span class="db-dot db-dot-miro" style="left:52.7%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.0</span></span>
+<span class="db-dot db-dot-miro" style="left:81.7%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 7.4</span></span>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 7.6</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 6.2</span></span>
+<span class="db-dot" style="left:53.5%;--row:1"><span class="db-connector"></span><span class="db-name">GLM 7.0</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Factuality</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:19.1%;--row:2"><span class="db-connector"></span><span class="db-name">GPT 60.0</span></span>
+<span class="db-dot db-dot-miro" style="left:65.8%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 67.7</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 72.4</span></span>
+<span class="db-dot" style="left:11.1%;--row:1"><span class="db-connector"></span><span class="db-name">Gemini 58.7</span></span>
+<span class="db-dot" style="left:25.0%;--row:3"><span class="db-connector"></span><span class="db-name">Claude 61.0</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 57.8</span></span>
+
+</div></div>
+</div>
+</div>
+</div>
+<h3>Process Evaluation Details</h3>
+<table class="score-table">
+<thead><tr><th>Model</th><th>Search Breadth</th><th>Analytical Depth</th><th>Progressive Refinement</th><th>Critical Thinking</th><th>Efficiency</th><th>Findings→Synthesis</th><th>Synthesis→Process</th><th>Contradiction</th></tr></thead>
+<tbody>
+<tr><td><strong>GPT</strong></td><td>8</td><td>6</td><td>7</td><td>8</td><td>6</td><td>9</td><td>7</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17</strong></td><td>7</td><td>5</td><td>7</td><td>8</td><td>4</td><td>7</td><td>5</td><td>6</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17 Mini</strong></td><td>7</td><td>3</td><td>6</td><td>7</td><td>4</td><td>7</td><td>5</td><td>8</td></tr>
+<tr><td><strong>Gemini</strong></td><td>7</td><td>6</td><td>7</td><td>5</td><td>6</td><td>8</td><td>5</td><td>7</td></tr>
+<tr><td><strong>Claude</strong></td><td>8</td><td>6</td><td>7</td><td>7</td><td>6</td><td>7</td><td>4</td><td>6</td></tr>
+<tr><td><strong>GLM Turbo</strong></td><td>8</td><td>6</td><td>7</td><td>7</td><td>5</td><td>8</td><td>5</td><td>6</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+<div class="tab-content" id="tab-8">
+<div class="card">
+<details class="query-details">
+<summary>
+<span class="query-summary-label">Query #97</span>
+<span class="query-summary-hint">点击展开原始查询</span>
+<span class="query-summary-chevron">›</span>
+</summary>
+<pre class="query-text">2026年4月初，蓝鸮资本对私募信贷基金实施赎回限制，叠加2026年地产与高收益债到期墙，正挑战传统流动性压力测试框架。提取蓝鸮受限基金的规模与可变现资产差额，结合KKR等机构在2026年3月前披露的信贷备用资金池，计算行业面对2026年债务到期峰值的真实流动性缺口。这种估值平滑与赎回门槛的叠加，在何种违约率临界点下会彻底击穿跨周期定价模型的有效边界？</pre>
+</details>
+<div class="db-card">
+<div class="db-header">
+<span class="overline">Score Distribution</span>
+<h4>各维度模型得分分布</h4>
+<p class="db-hint">每个维度上，各模型的得分点位。
+<span class="db-legend-dot db-legend-miro"></span>MiroThinker
+<span class="db-legend-dot db-legend-other"></span>Other models</p>
+</div>
+<div class="db-grid">
+<div class="db-row">
+<span class="db-label">Process</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.1</span></span>
+<span class="db-dot db-dot-miro" style="left:15.8%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 6.1</span></span>
+<span class="db-dot" style="left:74.4%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 6.9</span></span>
+<span class="db-dot" style="left:74.4%;--row:1"><span class="db-connector"></span><span class="db-name">Claude 6.9</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 6.0</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Synthesis</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:86.7%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 7.7</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:2"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.8</span></span>
+<span class="db-dot db-dot-miro" style="left:87.9%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 7.7</span></span>
+<span class="db-dot" style="left:64.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 7.3</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 6.4</span></span>
+<span class="db-dot" style="left:39.3%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 6.9</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Factuality</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 65.7</span></span>
+<span class="db-dot db-dot-miro" style="left:61.3%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 55.8</span></span>
+<span class="db-dot db-dot-miro" style="left:26.9%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 45.3</span></span>
+<span class="db-dot" style="left:32.6%;--row:2"><span class="db-connector"></span><span class="db-name">Gemini 47.1</span></span>
+<span class="db-dot" style="left:27.3%;--row:1"><span class="db-connector"></span><span class="db-name">Claude 45.5</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 39.0</span></span>
+
+</div></div>
+</div>
+</div>
+</div>
+<h3>Process Evaluation Details</h3>
+<table class="score-table">
+<thead><tr><th>Model</th><th>Search Breadth</th><th>Analytical Depth</th><th>Progressive Refinement</th><th>Critical Thinking</th><th>Efficiency</th><th>Findings→Synthesis</th><th>Synthesis→Process</th><th>Contradiction</th></tr></thead>
+<tbody>
+<tr><td><strong>GPT</strong></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17</strong></td><td>8</td><td>6</td><td>8</td><td>7</td><td>6</td><td>8</td><td>6</td><td>8</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17 Mini</strong></td><td>7</td><td>6</td><td>7</td><td>8</td><td>5</td><td>7</td><td>4</td><td>5</td></tr>
+<tr><td><strong>Gemini</strong></td><td>8</td><td>7</td><td>7</td><td>8</td><td>6</td><td>8</td><td>5</td><td>6</td></tr>
+<tr><td><strong>Claude</strong></td><td>8</td><td>6</td><td>7</td><td>7</td><td>6</td><td>8</td><td>5</td><td>8</td></tr>
+<tr><td><strong>GLM Turbo</strong></td><td>7</td><td>6</td><td>6</td><td>5</td><td>4</td><td>8</td><td>4</td><td>8</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+<div class="tab-content" id="tab-9">
+<div class="card">
+<details class="query-details">
+<summary>
+<span class="query-summary-label">Query #98</span>
+<span class="query-summary-hint">点击展开原始查询</span>
+<span class="query-summary-chevron">›</span>
+</summary>
+<pre class="query-text">2026年3月，HDFC Bank董事长的突发离职暴露出高层动荡。回溯该公司过去多个连续季度（截止至2025年第四季度）的净息差指引与实际达成数据，量化历史预期偏差幅度以评估最新指引可信度。在当前行业结构性重组的新型场景下，传统的&quot;利空出尽&quot;分析框架是否已经失效？结合内部人减持轨迹与合规岗位异动频率，这是董事会的主动排雷还是深层财务危机即将爆发的冰山一角？</pre>
+</details>
+<div class="db-card">
+<div class="db-header">
+<span class="overline">Score Distribution</span>
+<h4>各维度模型得分分布</h4>
+<p class="db-hint">每个维度上，各模型的得分点位。
+<span class="db-legend-dot db-legend-miro"></span>MiroThinker
+<span class="db-legend-dot db-legend-other"></span>Other models</p>
+</div>
+<div class="db-grid">
+<div class="db-row">
+<span class="db-label">Process</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:83.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 7.1</span></span>
+<span class="db-dot db-dot-miro" style="left:39.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 6.6</span></span>
+<span class="db-dot db-dot-miro db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 6.2</span></span>
+<span class="db-dot" style="left:61.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 6.9</span></span>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:1"><span class="db-connector"></span><span class="db-name">Claude 7.2</span></span>
+<span class="db-dot" style="left:39.0%;--row:1"><span class="db-connector"></span><span class="db-name">GLM 6.6</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Synthesis</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 6.7</span></span>
+<span class="db-dot db-dot-miro" style="left:70.2%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.5</span></span>
+<span class="db-dot db-dot-miro" style="left:71.6%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 7.5</span></span>
+<span class="db-dot" style="left:40.3%;--row:1"><span class="db-connector"></span><span class="db-name">Gemini 7.1</span></span>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 7.8</span></span>
+<span class="db-dot" style="left:30.7%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 7.0</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Factuality</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 38.9</span></span>
+<span class="db-dot db-dot-miro" style="left:37.2%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 43.3</span></span>
+<span class="db-dot db-dot-miro" style="left:76.2%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 48.9</span></span>
+<span class="db-dot" style="left:64.6%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 47.2</span></span>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 51.4</span></span>
+<span class="db-dot" style="left:43.5%;--row:1"><span class="db-connector"></span><span class="db-name">GLM 44.2</span></span>
+
+</div></div>
+</div>
+</div>
+</div>
+<h3>Process Evaluation Details</h3>
+<table class="score-table">
+<thead><tr><th>Model</th><th>Search Breadth</th><th>Analytical Depth</th><th>Progressive Refinement</th><th>Critical Thinking</th><th>Efficiency</th><th>Findings→Synthesis</th><th>Synthesis→Process</th><th>Contradiction</th></tr></thead>
+<tbody>
+<tr><td><strong>GPT</strong></td><td>6</td><td>7</td><td>8</td><td>7</td><td>6</td><td>8</td><td>6</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17</strong></td><td>8</td><td>6</td><td>8</td><td>7</td><td>5</td><td>8</td><td>5</td><td>6</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17 Mini</strong></td><td>8</td><td>4</td><td>7</td><td>6</td><td>5</td><td>7</td><td>5</td><td>8</td></tr>
+<tr><td><strong>Gemini</strong></td><td>8</td><td>6</td><td>7</td><td>7</td><td>5</td><td>8</td><td>6</td><td>8</td></tr>
+<tr><td><strong>Claude</strong></td><td>8</td><td>7</td><td>7</td><td>6</td><td>6</td><td>9</td><td>6</td><td>9</td></tr>
+<tr><td><strong>GLM Turbo</strong></td><td>8</td><td>6</td><td>7</td><td>7</td><td>5</td><td>8</td><td>5</td><td>7</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+<div class="tab-content" id="tab-10">
+<div class="card">
+<details class="query-details">
+<summary>
+<span class="query-summary-label">Query #99</span>
+<span class="query-summary-hint">点击展开原始查询</span>
+<span class="query-summary-chevron">›</span>
+</summary>
+<pre class="query-text">请综合全网评测、用户口碑、长期返修率、不同国家价格波动和未来6个月新品发布节奏，判断2026年最值得长期持有的一款扫地机器人是哪一款，并给出全球范围内最便宜且最靠谱的购买渠道</pre>
+</details>
+<div class="db-card">
+<div class="db-header">
+<span class="overline">Score Distribution</span>
+<h4>各维度模型得分分布</h4>
+<p class="db-hint">每个维度上，各模型的得分点位。
+<span class="db-legend-dot db-legend-miro"></span>MiroThinker
+<span class="db-legend-dot db-legend-other"></span>Other models</p>
+</div>
+<div class="db-grid">
+<div class="db-row">
+<span class="db-label">Process</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 7.5</span></span>
+<span class="db-dot db-dot-miro db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 6.2</span></span>
+<span class="db-dot db-dot-miro db-edge-left" style="left:6.0%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 6.2</span></span>
+<span class="db-dot" style="left:50.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 6.9</span></span>
+<span class="db-dot" style="left:50.0%;--row:1"><span class="db-connector"></span><span class="db-name">Claude 6.9</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:2"><span class="db-connector"></span><span class="db-name">GLM 6.2</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Synthesis</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:63.1%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 7.9</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 8.2</span></span>
+<span class="db-dot db-dot-miro" style="left:40.8%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 7.7</span></span>
+<span class="db-dot" style="left:67.0%;--row:1"><span class="db-connector"></span><span class="db-name">Gemini 7.9</span></span>
+<span class="db-dot" style="left:19.7%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 7.5</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 7.4</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Factuality</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:76.1%;--row:1"><span class="db-connector"></span><span class="db-name">GPT 63.9</span></span>
+<span class="db-dot db-dot-miro" style="left:84.8%;--row:3"><span class="db-connector"></span><span class="db-name is-miro">MT v17 64.9</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:4"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 66.0</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 55.6</span></span>
+<span class="db-dot" style="left:79.4%;--row:2"><span class="db-connector"></span><span class="db-name">Claude 64.3</span></span>
+<span class="db-dot" style="left:71.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 63.3</span></span>
+
+</div></div>
+</div>
+</div>
+</div>
+<h3>Process Evaluation Details</h3>
+<table class="score-table">
+<thead><tr><th>Model</th><th>Search Breadth</th><th>Analytical Depth</th><th>Progressive Refinement</th><th>Critical Thinking</th><th>Efficiency</th><th>Findings→Synthesis</th><th>Synthesis→Process</th><th>Contradiction</th></tr></thead>
+<tbody>
+<tr><td><strong>GPT</strong></td><td>8</td><td>7</td><td>8</td><td>8</td><td>6</td><td>9</td><td>6</td><td>8</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17</strong></td><td>8</td><td>6</td><td>7</td><td>8</td><td>5</td><td>7</td><td>5</td><td>4</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17 Mini</strong></td><td>7</td><td>6</td><td>8</td><td>6</td><td>5</td><td>7</td><td>5</td><td>6</td></tr>
+<tr><td><strong>Gemini</strong></td><td>7</td><td>6</td><td>8</td><td>5</td><td>5</td><td>9</td><td>6</td><td>9</td></tr>
+<tr><td><strong>Claude</strong></td><td>8</td><td>6</td><td>7</td><td>6</td><td>6</td><td>9</td><td>5</td><td>8</td></tr>
+<tr><td><strong>GLM Turbo</strong></td><td>8</td><td>5</td><td>6</td><td>4</td><td>6</td><td>9</td><td>5</td><td>7</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+<div class="tab-content" id="tab-11">
+<div class="card">
+<details class="query-details">
+<summary>
+<span class="query-summary-label">Query #100</span>
+<span class="query-summary-hint">点击展开原始查询</span>
+<span class="query-summary-chevron">›</span>
+</summary>
+<pre class="query-text">请帮我根据&quot;印度2月天气更炎热干燥，威胁小麦、大麦等冬季作物生长&quot;这个新闻进行深入的推导和预测，最终需要给我提供几个具体的投资建议</pre>
+</details>
+<div class="db-card">
+<div class="db-header">
+<span class="overline">Score Distribution</span>
+<h4>各维度模型得分分布</h4>
+<p class="db-hint">每个维度上，各模型的得分点位。
+<span class="db-legend-dot db-legend-miro"></span>MiroThinker
+<span class="db-legend-dot db-legend-other"></span>Other models</p>
+</div>
+<div class="db-grid">
+<div class="db-row">
+<span class="db-label">Process</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:17.0%;--row:1"><span class="db-connector"></span><span class="db-name">GPT 6.5</span></span>
+<span class="db-dot db-dot-miro" style="left:83.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.2</span></span>
+<span class="db-dot db-dot-miro db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 6.4</span></span>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:2"><span class="db-connector"></span><span class="db-name">Gemini 7.4</span></span>
+<span class="db-dot" style="left:83.0%;--row:1"><span class="db-connector"></span><span class="db-name">Claude 7.2</span></span>
+<span class="db-dot" style="left:17.0%;--row:2"><span class="db-connector"></span><span class="db-name">GLM 6.5</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Synthesis</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:71.7%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 7.8</span></span>
+<span class="db-dot db-dot-miro" style="left:82.6%;--row:2"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.9</span></span>
+<span class="db-dot db-dot-miro" style="left:81.6%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 7.9</span></span>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:3"><span class="db-connector"></span><span class="db-name">Gemini 8.0</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 7.3</span></span>
+<span class="db-dot" style="left:46.9%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 7.6</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Factuality</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:89.9%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 84.0</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:2"><span class="db-connector"></span><span class="db-name is-miro">MT v17 85.3</span></span>
+<span class="db-dot db-dot-miro" style="left:90.1%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 84.1</span></span>
+<span class="db-dot" style="left:17.7%;--row:1"><span class="db-connector"></span><span class="db-name">Gemini 61.0</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 57.3</span></span>
+<span class="db-dot" style="left:37.1%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 67.2</span></span>
+
+</div></div>
+</div>
+</div>
+</div>
+<h3>Process Evaluation Details</h3>
+<table class="score-table">
+<thead><tr><th>Model</th><th>Search Breadth</th><th>Analytical Depth</th><th>Progressive Refinement</th><th>Critical Thinking</th><th>Efficiency</th><th>Findings→Synthesis</th><th>Synthesis→Process</th><th>Contradiction</th></tr></thead>
+<tbody>
+<tr><td><strong>GPT</strong></td><td>7</td><td>6</td><td>7</td><td>6</td><td>5</td><td>8</td><td>6</td><td>7</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17</strong></td><td>8</td><td>7</td><td>8</td><td>6</td><td>6</td><td>8</td><td>6</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17 Mini</strong></td><td>7</td><td>6</td><td>7</td><td>7</td><td>5</td><td>8</td><td>5</td><td>6</td></tr>
+<tr><td><strong>Gemini</strong></td><td>8</td><td>7</td><td>8</td><td>7</td><td>6</td><td>9</td><td>6</td><td>8</td></tr>
+<tr><td><strong>Claude</strong></td><td>9</td><td>7</td><td>7</td><td>7</td><td>6</td><td>9</td><td>5</td><td>8</td></tr>
+<tr><td><strong>GLM Turbo</strong></td><td>8</td><td>6</td><td>6</td><td>4</td><td>5</td><td>8</td><td>6</td><td>9</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+<div class="tab-content" id="tab-12">
+<div class="card">
+<details class="query-details">
+<summary>
+<span class="query-summary-label">Query #101</span>
+<span class="query-summary-hint">点击展开原始查询</span>
+<span class="query-summary-chevron">›</span>
+</summary>
+<pre class="query-text">请找出新加坡最近一年最贵的bungalow交易，并结合地段稀缺性、买家背景、宏观利率、政府政策和豪宅市场周期，判断它是不是被低估，以及未来3到5年大概率能涨多少</pre>
+</details>
+<div class="db-card">
+<div class="db-header">
+<span class="overline">Score Distribution</span>
+<h4>各维度模型得分分布</h4>
+<p class="db-hint">每个维度上，各模型的得分点位。
+<span class="db-legend-dot db-legend-miro"></span>MiroThinker
+<span class="db-legend-dot db-legend-other"></span>Other models</p>
+</div>
+<div class="db-grid">
+<div class="db-row">
+<span class="db-label">Process</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 7.1</span></span>
+<span class="db-dot db-dot-miro" style="left:68.9%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 6.9</span></span>
+<span class="db-dot db-dot-miro" style="left:68.9%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 6.9</span></span>
+<span class="db-dot" style="left:43.7%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 6.6</span></span>
+<span class="db-dot" style="left:43.7%;--row:1"><span class="db-connector"></span><span class="db-name">Claude 6.6</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 6.2</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Synthesis</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:47.8%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 7.3</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:93.8%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT v17 8.2</span></span>
+<span class="db-dot db-dot-miro" style="left:89.1%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 8.1</span></span>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:2"><span class="db-connector"></span><span class="db-name">Gemini 8.2</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 6.5</span></span>
+<span class="db-dot" style="left:50.4%;--row:1"><span class="db-connector"></span><span class="db-name">GLM 7.4</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Factuality</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:64.1%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 70.0</span></span>
+<span class="db-dot db-dot-miro" style="left:42.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 63.4</span></span>
+<span class="db-dot db-dot-miro" style="left:74.3%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 73.1</span></span>
+<span class="db-dot" style="left:11.4%;--row:1"><span class="db-connector"></span><span class="db-name">Gemini 54.2</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 52.5</span></span>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 79.0</span></span>
+
+</div></div>
+</div>
+</div>
+</div>
+<h3>Process Evaluation Details</h3>
+<table class="score-table">
+<thead><tr><th>Model</th><th>Search Breadth</th><th>Analytical Depth</th><th>Progressive Refinement</th><th>Critical Thinking</th><th>Efficiency</th><th>Findings→Synthesis</th><th>Synthesis→Process</th><th>Contradiction</th></tr></thead>
+<tbody>
+<tr><td><strong>GPT</strong></td><td>7</td><td>6</td><td>8</td><td>7</td><td>5</td><td>9</td><td>6</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17</strong></td><td>7</td><td>6</td><td>7</td><td>6</td><td>6</td><td>9</td><td>6</td><td>8</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17 Mini</strong></td><td>6</td><td>5</td><td>8</td><td>7</td><td>6</td><td>8</td><td>6</td><td>9</td></tr>
+<tr><td><strong>Gemini</strong></td><td>7</td><td>6</td><td>7</td><td>6</td><td>5</td><td>9</td><td>6</td><td>7</td></tr>
+<tr><td><strong>Claude</strong></td><td>8</td><td>6</td><td>7</td><td>7</td><td>6</td><td>8</td><td>4</td><td>7</td></tr>
+<tr><td><strong>GLM Turbo</strong></td><td>7</td><td>5</td><td>6</td><td>4</td><td>6</td><td>9</td><td>5</td><td>8</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+<div class="tab-content" id="tab-13">
+<div class="card">
+<details class="query-details">
+<summary>
+<span class="query-summary-label">Query #103</span>
+<span class="query-summary-hint">点击展开原始查询</span>
+<span class="query-summary-chevron">›</span>
+</summary>
+<pre class="query-text">美伊战争对是否会引起通货膨胀？影响的传导链是什么样的？</pre>
+</details>
+<div class="db-card">
+<div class="db-header">
+<span class="overline">Score Distribution</span>
+<h4>各维度模型得分分布</h4>
+<p class="db-hint">每个维度上，各模型的得分点位。
+<span class="db-legend-dot db-legend-miro"></span>MiroThinker
+<span class="db-legend-dot db-legend-other"></span>Other models</p>
+</div>
+<div class="db-grid">
+<div class="db-row">
+<span class="db-label">Process</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 7.1</span></span>
+<span class="db-dot db-dot-miro" style="left:55.5%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT v17 6.2</span></span>
+<span class="db-dot db-dot-miro" style="left:33.5%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 5.8</span></span>
+<span class="db-dot" style="left:72.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 6.6</span></span>
+<span class="db-dot" style="left:50.0%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 6.1</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 5.1</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Synthesis</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:2"><span class="db-connector"></span><span class="db-name">GPT 8.1</span></span>
+<span class="db-dot db-dot-miro" style="left:12.9%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.6</span></span>
+<span class="db-dot db-dot-miro" style="left:86.0%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 8.1</span></span>
+<span class="db-dot" style="left:75.2%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 8.0</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 7.6</span></span>
+<span class="db-dot" style="left:15.9%;--row:2"><span class="db-connector"></span><span class="db-name">GLM 7.6</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Factuality</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:1"><span class="db-connector"></span><span class="db-name">GPT 97.4</span></span>
+<span class="db-dot db-dot-miro" style="left:90.2%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 96.1</span></span>
+<span class="db-dot db-dot-miro" style="left:50.1%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 81.8</span></span>
+<span class="db-dot" style="left:22.8%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 72.1</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 66.1</span></span>
+<span class="db-dot" style="left:51.2%;--row:1"><span class="db-connector"></span><span class="db-name">GLM 82.2</span></span>
+
+</div></div>
+</div>
+</div>
+</div>
+<h3>Process Evaluation Details</h3>
+<table class="score-table">
+<thead><tr><th>Model</th><th>Search Breadth</th><th>Analytical Depth</th><th>Progressive Refinement</th><th>Critical Thinking</th><th>Efficiency</th><th>Findings→Synthesis</th><th>Synthesis→Process</th><th>Contradiction</th></tr></thead>
+<tbody>
+<tr><td><strong>GPT</strong></td><td>8</td><td>7</td><td>8</td><td>6</td><td>6</td><td>8</td><td>6</td><td>8</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17</strong></td><td>4</td><td>7</td><td>6</td><td>4</td><td>7</td><td>9</td><td>6</td><td>7</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17 Mini</strong></td><td>6</td><td>5</td><td>6</td><td>4</td><td>5</td><td>8</td><td>5</td><td>7</td></tr>
+<tr><td><strong>Gemini</strong></td><td>7</td><td>7</td><td>8</td><td>4</td><td>5</td><td>9</td><td>6</td><td>7</td></tr>
+<tr><td><strong>Claude</strong></td><td>8</td><td>6</td><td>6</td><td>3</td><td>6</td><td>9</td><td>4</td><td>7</td></tr>
+<tr><td><strong>GLM Turbo</strong></td><td>6</td><td>7</td><td>5</td><td>3</td><td>4</td><td>6</td><td>3</td><td>7</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+<div class="tab-content" id="tab-14">
+<div class="card">
+<details class="query-details">
+<summary>
+<span class="query-summary-label">Query #108</span>
+<span class="query-summary-hint">点击展开原始查询</span>
+<span class="query-summary-chevron">›</span>
+</summary>
+<pre class="query-text">我计划做一个以AI为主题的全球股票组合，持仓周期6-12个月。假设模拟盘1000万，帮我做一轮完整的筛选和分析：1）从全球AI产业链上中下游（芯片/算力、基础模型、中间件/工具层、应用层）中，找出过去两个季度营收增速超过40%、但当前P/S低于所在子赛道中位数的标的，这类&quot;增速高但估值还没跑起来&quot;的公司有哪些？2）叠加机构持仓信号，过去一个季度被3家以上顶级机构（如Bridgewater、Renaissance、ARK）同时增持的AI相关标的有哪些？和第一步筛出的名单有交集吗？3）再叠加技术面，上述候选标的中，哪些目前处于周线级别的突破/蓄力形态而非高位钝化？4）综合以上三层过滤，帮我推荐一个8-10只标的的组合，给出每只的建议仓位权重、买入逻辑、关键风险点和止损参考位。同时帮我设计一个大盘系统性风险对冲方案，比如搭配什么样的ETF put或VIX策略来保护组合下行风险。</pre>
+</details>
+<div class="db-card">
+<div class="db-header">
+<span class="overline">Score Distribution</span>
+<h4>各维度模型得分分布</h4>
+<p class="db-hint">每个维度上，各模型的得分点位。
+<span class="db-legend-dot db-legend-miro"></span>MiroThinker
+<span class="db-legend-dot db-legend-other"></span>Other models</p>
+</div>
+<div class="db-grid">
+<div class="db-row">
+<span class="db-label">Process</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:83.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 6.8</span></span>
+<span class="db-dot db-dot-miro" style="left:28.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 6.1</span></span>
+<span class="db-dot db-dot-miro db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 5.9</span></span>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:1"><span class="db-connector"></span><span class="db-name">Gemini 6.9</span></span>
+<span class="db-dot" style="left:50.0%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 6.4</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:1"><span class="db-connector"></span><span class="db-name">GLM 5.9</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Synthesis</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:65.9%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 6.8</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.4</span></span>
+<span class="db-dot db-dot-miro" style="left:80.3%;--row:2"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 7.1</span></span>
+<span class="db-dot" style="left:80.0%;--row:1"><span class="db-connector"></span><span class="db-name">Gemini 7.1</span></span>
+<span class="db-dot" style="left:79.9%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 7.1</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 5.5</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Factuality</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:69.8%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 76.5</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 88.7</span></span>
+<span class="db-dot db-dot-miro" style="left:34.7%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 58.8</span></span>
+<span class="db-dot" style="left:26.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 54.5</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 44.4</span></span>
+<span class="db-dot" style="left:45.6%;--row:2"><span class="db-connector"></span><span class="db-name">GLM 64.3</span></span>
+
+</div></div>
+</div>
+</div>
+</div>
+<h3>Process Evaluation Details</h3>
+<table class="score-table">
+<thead><tr><th>Model</th><th>Search Breadth</th><th>Analytical Depth</th><th>Progressive Refinement</th><th>Critical Thinking</th><th>Efficiency</th><th>Findings→Synthesis</th><th>Synthesis→Process</th><th>Contradiction</th></tr></thead>
+<tbody>
+<tr><td><strong>GPT</strong></td><td>7</td><td>6</td><td>7</td><td>8</td><td>5</td><td>8</td><td>6</td><td>7</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17</strong></td><td>6</td><td>5</td><td>7</td><td>7</td><td>4</td><td>8</td><td>5</td><td>7</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17 Mini</strong></td><td>7</td><td>4</td><td>6</td><td>7</td><td>5</td><td>8</td><td>4</td><td>6</td></tr>
+<tr><td><strong>Gemini</strong></td><td>8</td><td>6</td><td>7</td><td>7</td><td>6</td><td>8</td><td>6</td><td>7</td></tr>
+<tr><td><strong>Claude</strong></td><td>7</td><td>6</td><td>6</td><td>7</td><td>5</td><td>8</td><td>5</td><td>7</td></tr>
+<tr><td><strong>GLM Turbo</strong></td><td>6</td><td>5</td><td>6</td><td>3</td><td>7</td><td>8</td><td>5</td><td>7</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+<script>
+function switchTab(idx) {
+    document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', i === idx);
+    });
+    document.querySelectorAll('.tab-content').forEach((content, i) => {
+        content.classList.toggle('active', i === idx);
+    });
+}
+</script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MiroEval — Legal & Medical Analysis</title>
+<title>MiroEval — Domain Analysis</title>
 <style>
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F7F5ED;color:#1a1917;margin:0;padding:80px 24px;min-height:100vh;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;}
 .wrap{max-width:640px;width:100%;}
@@ -12,6 +12,9 @@ a.card{position:relative;display:block;padding:24px 28px;border:1px solid rgba(2
 a.card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;}
 a.card.legal::before{background:#5BA08A;}
 a.card.medical::before{background:#6B8FC2;}
+a.card.financial::before{background:#C8963E;}
+a.card.programmer::before{background:#7C5CBF;}
+a.card.scientist::before{background:#C45A3C;}
 a.card:hover{box-shadow:0 4px 16px rgba(0,0,0,.06);border-color:rgba(26,25,23,.2);transform:translateY(-1px);}
 .card h2{font-family:Georgia,serif;font-weight:600;font-size:1.15rem;margin:0 0 6px;}
 .card .meta{font-size:.82rem;color:#73706a;letter-spacing:.06em;text-transform:uppercase;font-weight:600;margin-bottom:10px;}
@@ -19,10 +22,13 @@ a.card:hover{box-shadow:0 4px 16px rgba(0,0,0,.06);border-color:rgba(26,25,23,.2
 .foot{margin-top:48px;font-size:.78rem;color:#a5a39e;}
 </style></head><body><div class="wrap">
 <h1>MiroEval · Domain Analysis</h1>
-<p class="lede">6 款 Deep Research 模型在 Legal 与 Medical 两个专业领域上的评测分析面板。</p>
+<p class="lede">6 款 Deep Research 模型在 5 个专业领域上的评测分析面板。</p>
 <div class="grid">
 <a class="card legal" href="legal_analysis.html"><div class="meta">Legal · 10 queries</div><h2>Legal Domain Analysis →</h2><p>跨法域判例对比、法条冲突、AI 等新兴议题。</p></a>
 <a class="card medical" href="medical_analysis.html"><div class="meta">Medical · 10 queries</div><h2>Medical Domain Analysis →</h2><p>复杂临床决策、证据综合、疗法创新评估。</p></a>
+<a class="card financial" href="financial_analysis.html"><div class="meta">Financial · 10 queries</div><h2>Financial Domain Analysis →</h2><p>对冲基金策略、财报解读、监管政策与市场博弈。</p></a>
+<a class="card programmer" href="programmer_analysis.html"><div class="meta">Programmer · 10 queries</div><h2>Programmer Domain Analysis →</h2><p>PyTorch / vLLM / LangChain 等生产级工程问题诊断。</p></a>
+<a class="card scientist" href="scientist_analysis.html"><div class="meta">Scientist · 10 queries</div><h2>Scientist Domain Analysis →</h2><p>AI 安全、推理加速、量子计算等前沿研究课题。</p></a>
 </div>
-<div class="foot">Generated 2026-04-14 · 6 Models · 3 Evaluation Dimensions</div>
+<div class="foot">Generated 2026-04 · 6 Models · 3 Evaluation Dimensions</div>
 </div></body></html>

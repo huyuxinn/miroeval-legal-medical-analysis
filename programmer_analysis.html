@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Programmer Domain Analysis Dashboard</title>
+<style>
+
+:root {
+    --bg-primary: #FAF9F6;        /* Main parchment */
+    --bg-secondary: #F3F0EB;      /* Secondary warm tier */
+    --bg-tertiary: #EDE8E1;       /* Deeper warm for hover/emphasis */
+    --bg-white: #FFFFFF;          /* Card surface */
+
+    --accent: #C45A3C;            /* Refined terracotta */
+    --accent-light: #E8A590;
+    --accent-bg: rgba(196,90,60,.06);
+    --accent-bg-hover: rgba(196,90,60,.10);
+
+    --text-primary: #1A1612;      /* Warm black */
+    --text-secondary: #5D544B;
+    --text-tertiary: #8C8278;
+    --text-inverse: #FAF9F6;
+
+    --border: #E5DFD7;
+    --border-light: #EFEBE5;
+
+    /* Multi-color semantic tags (low-saturation, warm-grounded) */
+    --tag-blue-bg: #EEF2F7; --tag-blue: #4A6FA5;
+    --tag-green-bg: #EDF5F0; --tag-green: #3D7A5F;
+    --tag-orange-bg: #FDF1EB; --tag-orange: #B85C38;
+    --tag-red-bg: #FBEEED; --tag-red: #B54A4A;
+    --tag-purple-bg: #F2EFF7; --tag-purple: #6B5B95;
+    --tag-teal-bg: #EDF5F4; --tag-teal: #3D7A72;
+
+    --radius: 14px;
+    --radius-sm: 10px;
+    --radius-xs: 7px;
+
+    --shadow-sm: 0 1px 3px rgba(26,22,18,.04), 0 1px 2px rgba(26,22,18,.06);
+    --shadow: 0 2px 8px rgba(26,22,18,.05), 0 1px 3px rgba(26,22,18,.08);
+    --shadow-lg: 0 8px 24px rgba(26,22,18,.06), 0 2px 8px rgba(26,22,18,.04);
+
+    --font-serif: "Noto Serif SC", "Songti SC", "SimSun", Georgia, serif;
+    --font-sans: "Noto Sans SC", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    --font-mono: "SF Mono", "Fira Code", Consolas, monospace;
+
+    /* Legacy aliases for backward compat within this file */
+    --primary: var(--accent);
+    --primary-soft: var(--bg-secondary);
+    --bg: var(--bg-primary);
+    --card-bg: var(--bg-white);
+    --card-elevated: var(--bg-white);
+    --text: var(--text-primary);
+    --text-light: var(--text-secondary);
+    --border-warm: var(--border);
+    --ring-warm: var(--border);
+    --mirothinker: var(--accent);
+    --mirothinker-soft: var(--tag-orange-bg);
+    --coral: var(--accent-light);
+    --warning: var(--tag-orange);
+    --danger: var(--tag-red);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--font-sans); background: var(--bg-primary); color: var(--text-primary); line-height: 1.75; -webkit-font-smoothing: antialiased; font-size: 16px; }
+.container { max-width: 1280px; margin: 0 auto; padding: 56px 48px 96px; }
+h1 { font-family: var(--font-serif); font-size: clamp(2.2rem, 4vw, 3rem); font-weight: 900; line-height: 1.2; letter-spacing: -0.02em; color: var(--text-primary); }
+h2 { font-family: var(--font-serif); font-size: clamp(1.5rem, 2.4vw, 2.1rem); font-weight: 700; line-height: 1.3; color: var(--text-primary); letter-spacing: -0.01em; }
+h3 { font-family: var(--font-serif); font-size: 1.2rem; font-weight: 700; color: var(--text-primary); line-height: 1.35; letter-spacing: -0.005em; }
+h4 { font-size: 1.05rem; font-weight: 600; color: var(--text-primary); }
+.subtitle { color: var(--text-tertiary); margin-bottom: 48px; font-size: 1.05rem; }
+.overline { display: inline-block; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+.eyebrow { display: inline-flex; align-items: center; gap: 8px; background: var(--accent-bg); border: 1px solid rgba(196,90,60,.14); border-radius: 50px; padding: 5px 14px; font-size: 0.76rem; font-weight: 500; color: var(--accent); margin-bottom: 18px; }
+.eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+a { color: var(--accent); text-decoration: none; }
+.highlight { color: var(--accent); }
+
+/* Generic section block */
+.section-block { margin-bottom: 52px; }
+
+/* Overview Panel */
+.overview-panel { background: var(--bg-white); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 36px 40px; box-shadow: var(--shadow-sm); margin-bottom: 36px; }
+.overview-table { width: 100%; border-collapse: collapse; margin-top: 24px; }
+.overview-table th, .overview-table td { padding: 14px 16px; text-align: center; border-bottom: 1px solid var(--border-light); }
+.overview-table th { background: transparent; font-weight: 600; color: var(--text-tertiary); font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1.5px solid var(--border); }
+.overview-table td { color: var(--text-secondary); font-size: 0.96rem; }
+.overview-table td strong { color: var(--text-primary); font-weight: 600; }
+.overview-table tbody tr { transition: background 0.15s; }
+.overview-table tbody tr:hover { background: var(--bg-secondary); }
+.rank-badge { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; font-weight: 700; font-size: 0.95rem; font-family: var(--font-serif); background: var(--bg-secondary); color: var(--text-tertiary); }
+.rank-1 { background: var(--accent); color: #fff; }
+.rank-2 { background: var(--bg-tertiary); color: var(--text-secondary); box-shadow: 0 0 0 1.5px var(--border); }
+.rank-3 { background: var(--bg-secondary); color: var(--text-secondary); }
+.mirothinker-row { background: var(--accent-bg) !important; }
+.mirothinker-row:hover { background: var(--accent-bg-hover) !important; }
+.mirothinker-row td:first-child { border-left: 2px solid var(--accent); }
+.overview-notes { list-style: none; margin: 22px 0 0; padding: 0; }
+.overview-notes-item { font-size: 0.82rem; color: var(--text-tertiary); line-height: 1.75; margin: 2px 0; }
+.overview-notes-item::before { content: "·"; color: var(--text-tertiary); margin-right: 8px; }
+
+/* Tabs */
+.tab-container { margin: 40px 0; }
+.tab-buttons { display: flex; gap: 2px; flex-wrap: wrap; border-bottom: 1px solid var(--border); padding-bottom: 0; margin-bottom: 4px; }
+.tab-btn { font-family: var(--font-sans); padding: 12px 20px; border: none; background: none; cursor: pointer; font-size: 0.92rem; color: var(--text-tertiary); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; font-weight: 500; }
+.tab-btn:hover { color: var(--text-secondary); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+.tab-content { display: none; padding: 32px 0 20px; }
+.tab-content.active { display: block; }
+
+/* Cards (generic body card inside tabs / overview) */
+.card { background: var(--bg-white); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 32px; box-shadow: var(--shadow-sm); margin-bottom: 24px; transition: box-shadow 0.2s, border-color 0.2s; }
+.card:hover { box-shadow: var(--shadow); border-color: var(--border); }
+/* Query text — collapsible via <details> */
+.query-details { margin: 0 0 26px; }
+.query-details > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 14px; padding: 14px 20px; background: var(--bg-secondary); border: 1px solid var(--border-light); border-radius: var(--radius-sm); transition: background 0.15s ease, border-color 0.15s ease; user-select: none; }
+.query-details > summary::-webkit-details-marker { display: none; }
+.query-details > summary:hover { background: var(--bg-tertiary); border-color: var(--border); }
+.query-summary-label { font-family: var(--font-serif); font-size: 1.1rem; font-weight: 700; color: var(--text-primary); letter-spacing: -0.005em; }
+.query-summary-hint { font-size: 0.78rem; color: var(--text-tertiary); margin-left: auto; letter-spacing: 0.05em; }
+.query-summary-chevron { display: inline-block; font-size: 1.3rem; color: var(--accent); line-height: 1; transform: rotate(90deg); transition: transform 0.2s ease; font-weight: 600; }
+.query-details[open] > summary { background: var(--bg-tertiary); border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom-color: transparent; }
+.query-details[open] > summary .query-summary-chevron { transform: rotate(270deg); color: var(--text-secondary); }
+.query-details[open] > summary .query-summary-hint::before { content: "点击收起"; }
+.query-details[open] > summary .query-summary-hint { visibility: hidden; position: relative; }
+.query-details[open] > summary .query-summary-hint::before { visibility: visible; position: absolute; right: 0; }
+.query-text { background: var(--bg-secondary); border: 1px solid var(--border-light); border-top: none; border-radius: 0 0 var(--radius-sm) var(--radius-sm); padding: 22px 26px; margin: 0; font-size: 1rem; line-height: 1.85; color: var(--text-primary); white-space: pre-wrap; font-family: var(--font-serif); font-weight: 400; }
+
+/* Dumbbell score distribution */
+.db-card { background: var(--bg-secondary); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 26px 30px 40px; margin: 22px 0 8px; }
+.db-header { margin-bottom: 22px; }
+.db-header .overline { margin-bottom: 6px; }
+.db-header h4 { font-family: var(--font-serif); font-size: 1.08rem; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; }
+.db-hint { font-size: 0.8rem; color: var(--text-tertiary); line-height: 1.7; }
+.db-legend-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; vertical-align: middle; margin: 0 4px 0 8px; border: 1.5px solid var(--bg-white); box-shadow: 0 0 0 1px var(--text-tertiary); }
+.db-legend-miro { background: var(--accent); box-shadow: 0 0 0 1.5px var(--accent); }
+.db-legend-other { background: var(--text-tertiary); }
+.db-grid { display: flex; flex-direction: column; gap: 30px; padding-top: 6px; }
+.db-row { display: grid; grid-template-columns: 120px 1fr; align-items: center; gap: 24px; }
+.db-label { font-family: var(--font-sans); font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.14em; padding-top: 30px; }
+/* Axis just wraps the inner track; dots positioned inside track */
+.db-axis { position: relative; min-height: 92px; display: block; }
+.db-track { position: relative; height: 82px; }
+.db-baseline { position: absolute; bottom: 16px; left: 6px; right: 6px; height: 1px; background: var(--border); }
+.db-track::before, .db-track::after { content: ""; position: absolute; bottom: 12px; width: 1px; height: 9px; background: var(--border); }
+.db-track::before { left: 6px; }
+.db-track::after { right: 6px; }
+.db-dot { position: absolute; bottom: 12px; width: 10px; height: 10px; border-radius: 50%; background: var(--text-tertiary); border: 1.5px solid var(--bg-secondary); box-shadow: 0 0 0 1px var(--text-tertiary); transform: translate(-50%, 50%); cursor: default; transition: transform 0.18s ease; z-index: 1; }
+.db-dot-miro { background: var(--accent); box-shadow: 0 0 0 1.5px var(--accent); width: 13px; height: 13px; z-index: 3; border-color: var(--bg-secondary); }
+.db-dot:hover { transform: translate(-50%, 50%) scale(1.35); z-index: 20; }
+.db-dot:hover .db-name { color: var(--accent); }
+/* Connector: thin vertical line from dot up to its label row */
+.db-connector { position: absolute; left: 50%; bottom: 50%; width: 1px; background: var(--border); transform: translateX(-50%); height: calc(12px + var(--row, 0) * 18px); pointer-events: none; }
+.db-dot-miro .db-connector { background: var(--accent-light); }
+/* Label — always visible, placed above dot at a staggered row */
+.db-name { position: absolute; left: 50%; bottom: calc(50% + 12px + var(--row, 0) * 18px); transform: translate(-50%, 0); font-family: var(--font-sans); font-size: 0.74rem; font-weight: 600; color: var(--text-secondary); white-space: nowrap; line-height: 1.2; pointer-events: none; }
+.db-name.is-miro { color: var(--accent); font-weight: 700; }
+/* Edge-anchored labels: pin to dot's left/right so they never overflow the track */
+.db-dot.db-edge-left .db-name { transform: translate(0, 0); }
+.db-dot.db-edge-right .db-name { transform: translate(-100%, 0); }
+
+/* Ribbon divider — subtle section separator */
+.ribbon-divider { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 52px auto 44px; max-width: 520px; }
+.ribbon-divider .ribbon-line { flex: 1; height: 1px; background: linear-gradient(to right, transparent 0%, var(--border) 30%, var(--border) 70%, transparent 100%); }
+.ribbon-divider .ribbon-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-light); box-shadow: 0 0 0 4px var(--bg-primary), 0 0 0 5px var(--border); flex-shrink: 0; }
+
+/* Score table */
+.score-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 16px 0 6px; }
+.score-table th, .score-table td { padding: 11px 12px; border-bottom: 1px solid var(--border-light); text-align: center; color: var(--text-secondary); }
+.score-table th { background: transparent; color: var(--text-tertiary); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1.5px solid var(--border); }
+.score-table td:first-child, .score-table th:first-child { text-align: left; color: var(--text-primary); }
+.score-table tr:last-child td { border-bottom: none; }
+
+
+/* Hero TL;DR section — container styled like overview-panel for heading-level parity */
+.hero-section { background: var(--bg-white); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 36px 40px; box-shadow: var(--shadow-sm); margin: 40px 0 52px; }
+.hero-section h2 { margin-bottom: 10px; }
+.hero-subtitle { color: var(--text-tertiary); font-size: 0.98rem; margin-bottom: 26px; }
+.hero-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; }
+.hero-card { position: relative; display: flex; gap: 16px; padding: 26px 26px 24px; border-radius: var(--radius); background: var(--bg-white); border: 1px solid var(--border-light); overflow: hidden; transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s; }
+.hero-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent); }
+.hero-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); border-color: var(--border); }
+.hero-card.hero-miro { background: var(--accent-bg); }
+.hero-card.hero-miro:hover { background: var(--accent-bg-hover); }
+.hero-icon { font-size: 1.5rem; line-height: 1; flex-shrink: 0; padding-top: 3px; }
+.hero-body { flex: 1; min-width: 0; }
+.hero-card-title { font-family: var(--font-sans); font-size: 0.72rem; font-weight: 700; color: var(--accent); letter-spacing: 0.14em; margin-bottom: 10px; text-transform: uppercase; }
+.hero-card-text { font-size: 0.96rem; line-height: 1.7; color: var(--text-secondary); }
+
+/* Key Observations — Editorial Panel (Option A), mirrors .persona-intro-section */
+.ko-section-panel { background: var(--bg-white); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 40px 44px; margin-bottom: 36px; box-shadow: var(--shadow-sm); }
+.ko-section-panel h2 { margin: 8px 0 14px; }
+.ko-lede { font-family: var(--font-sans); font-size: 1rem; color: var(--text-secondary); line-height: 1.8; margin: 0 0 28px; max-width: 780px; }
+
+.ko-findings { display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap: 20px; }
+
+.ko-finding-card { position: relative; border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 28px 28px 24px; background: var(--bg-white); overflow: hidden; }
+.ko-finding-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.ko-finding-card.ko-good::before { background: var(--tag-green); }
+.ko-finding-card.ko-bad::before { background: var(--tag-red, #c45a3c); }
+
+.ko-finding-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.ko-finding-tag { font-family: var(--font-serif); font-weight: 700; font-size: 1.12rem; letter-spacing: -0.005em; }
+.ko-finding-card.ko-good .ko-finding-tag { color: var(--tag-green); }
+.ko-finding-card.ko-bad .ko-finding-tag { color: var(--tag-red, #c45a3c); }
+.ko-finding-en { font-family: var(--font-sans); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.18em; color: var(--text-tertiary); text-transform: uppercase; }
+
+.ko-finding-headline { font-family: var(--font-serif); font-weight: 500; font-size: 1.05rem; line-height: 1.75; color: var(--text-primary); margin: 0 0 22px; }
+
+/* Representative query callout — mirrors .persona-insight */
+.ko-query-callout { background: var(--bg-secondary); border-left: 3px solid var(--accent); padding: 16px 20px; border-radius: 0 var(--radius-sm, 4px) var(--radius-sm, 4px) 0; margin-bottom: 24px; }
+.ko-query-cap { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; gap: 10px; }
+.ko-cap-label { font-family: var(--font-sans); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.16em; color: var(--text-tertiary); text-transform: uppercase; }
+.ko-cap-id { font-family: var(--font-mono); font-size: 0.78rem; color: var(--accent); font-weight: 600; }
+.ko-query-body { font-family: var(--font-sans); font-size: 0.88rem; line-height: 1.75; color: var(--text-secondary); margin: 0 0 12px; padding: 0; white-space: pre-wrap; }
+.ko-query-metric { font-family: var(--font-sans); font-size: 0.82rem; color: var(--text-tertiary); padding-top: 10px; border-top: 1px dashed var(--border-light); }
+.ko-query-metric strong { color: var(--text-primary); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.ko-sub-heading { font-family: var(--font-serif); font-weight: 600; font-size: 1rem; color: var(--text-primary); margin: 26px 0 4px; }
+.ko-sub-note { font-family: var(--font-sans); font-size: 0.82rem; color: var(--text-tertiary); line-height: 1.65; margin: 0 0 14px; }
+
+/* Model mini-cards — mirrors .qtype-grid + .qtype-card */
+.ko-model-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; margin-bottom: 6px; }
+.ko-model-tile { position: relative; border: 1px solid var(--border-light); border-radius: var(--radius-sm, 4px); padding: 14px 16px 12px 20px; background: var(--bg-white); transition: box-shadow 0.15s, border-color 0.15s; overflow: hidden; }
+.ko-model-tile::before { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 3px; background: var(--border); }
+.ko-model-tile:hover { box-shadow: var(--shadow-sm); border-color: var(--border); }
+.ko-model-tile.is-miro::before { background: var(--tag-purple); }
+.ko-model-tile.is-miro { background: linear-gradient(90deg, var(--tag-purple-bg) 0%, var(--bg-white) 18%); }
+.ko-tile-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+.ko-tile-name { font-family: var(--font-serif); font-weight: 700; font-size: 0.98rem; color: var(--text-primary); letter-spacing: -0.005em; }
+.ko-tile-len { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-tertiary); }
+.ko-tile-scores { display: flex; flex-wrap: wrap; gap: 10px; font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-tertiary); margin-bottom: 8px; }
+.ko-tile-scores b { color: var(--text-primary); font-weight: 600; font-variant-numeric: tabular-nums; }
+.ko-tile-summary { font-family: var(--font-sans); font-size: 0.85rem; line-height: 1.65; color: var(--text-secondary); margin: 0; }
+
+/* Why analysis tiles — mirrors .diff-grid + .diff-card */
+.ko-why-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+.ko-why-tile { background: var(--bg-secondary); border-radius: var(--radius-sm, 4px); padding: 12px 16px; }
+.ko-why-tile-title { font-family: var(--font-serif); font-weight: 600; font-size: 0.92rem; color: var(--text-primary); margin-bottom: 4px; letter-spacing: -0.005em; }
+.ko-finding-card.ko-good .ko-why-tile-title { color: var(--tag-green); }
+.ko-finding-card.ko-bad .ko-why-tile-title { color: var(--tag-red, #c45a3c); }
+.ko-why-tile-body { font-family: var(--font-sans); font-size: 0.83rem; line-height: 1.65; color: var(--text-secondary); margin: 0; }
+
+@media (max-width: 960px) {
+    .ko-findings { grid-template-columns: 1fr; }
+}
+
+/* Persona intro section */
+.persona-intro-section { background: var(--bg-white); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 40px 44px; margin-bottom: 36px; box-shadow: var(--shadow-sm); }
+.persona-intro-section h3 { margin: 28px 0 16px; font-size: 1.1rem; }
+.persona-intro-section h3:first-of-type { margin-top: 8px; }
+.persona-insight { font-family: var(--font-sans); font-size: 1rem; color: var(--text-secondary); background: var(--bg-secondary); border-left: 3px solid var(--accent); padding: 18px 22px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin: 0 0 24px; line-height: 1.85; }
+.persona-insight strong { color: var(--text-primary); }
+.qtype-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.qtype-card { position: relative; border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 20px 22px 18px; background: var(--bg-white); overflow: hidden; transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s; }
+.qtype-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent); }
+.qtype-card:nth-child(6n+2)::before { background: var(--tag-teal); }
+.qtype-card:nth-child(6n+3)::before { background: var(--tag-purple); }
+.qtype-card:nth-child(6n+4)::before { background: var(--tag-green); }
+.qtype-card:nth-child(6n+5)::before { background: var(--tag-blue); }
+.qtype-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); border-color: var(--border); }
+.qtype-head { margin-bottom: 10px; display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+.qtype-name { font-family: var(--font-serif); font-weight: 700; color: var(--text-primary); font-size: 1.1rem; }
+.qtype-en { color: var(--text-tertiary); font-size: 0.82rem; font-weight: 400; }
+.qtype-weight { font-size: 0.72rem; color: var(--text-tertiary); margin-left: auto; font-weight: 400; }
+.qtype-desc { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7; }
+.diff-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.diff-card { background: var(--bg-secondary); border: none; border-radius: var(--radius-sm); padding: 14px 18px; transition: background 0.15s; }
+.diff-card:hover { background: var(--bg-tertiary); }
+.diff-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 10px; }
+.diff-name { font-weight: 600; font-size: 0.92rem; color: var(--text-primary); }
+.diff-tag { font-size: 0.68rem; background: var(--tag-purple-bg); color: var(--tag-purple); padding: 3px 10px; border-radius: 50px; font-family: var(--font-mono); letter-spacing: 0; font-weight: 500; }
+.diff-desc { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.65; }
+
+/* Execution pattern observation section — matches overview-panel container treatment */
+.execution-pattern-section { background: var(--bg-white); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 36px 40px; margin: 28px 0 36px; box-shadow: var(--shadow-sm); }
+.execution-pattern-section h2 { margin-bottom: 22px; }
+.exec-para { font-family: var(--font-sans); font-size: 0.98rem; line-height: 1.9; color: var(--text-secondary); margin-bottom: 16px; padding-left: 16px; border-left: 3px solid transparent; }
+.exec-para:last-child { margin-bottom: 0; }
+.exec-para.pattern { border-left-color: var(--tag-blue); background: linear-gradient(to right, var(--bg-secondary) 0%, transparent 40%); padding: 14px 18px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+.exec-para.top-model { border-left-color: var(--tag-green); padding: 8px 16px 8px 18px; }
+.exec-para.mirothinker { border-left-color: var(--tag-purple); padding: 8px 16px 8px 18px; background: linear-gradient(to right, var(--tag-purple-bg) 0%, transparent 50%); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+.exec-para strong { color: var(--text-primary); font-weight: 600; }
+.exec-para code { font-family: var(--font-mono); font-size: 0.88em; background: var(--bg-tertiary); color: var(--text-primary); padding: 2px 6px; border-radius: 3px; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .db-row { grid-template-columns: 70px 1fr; gap: 14px; }
+    .db-label { font-size: 0.68rem; padding-top: 24px; }
+    .db-name { font-size: 0.68rem; }
+}
+
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Programmer Domain <span class="highlight">Analysis</span></h1>
+<p class="subtitle">6 Models &nbsp;·&nbsp; 10 Queries &nbsp;·&nbsp; 3 Evaluation Dimensions</p>
+
+<div class="overview-panel">
+<span class="overline">Model Rankings</span>
+<h2>整体表现一览</h2>
+<table class="overview-table">
+<thead><tr>
+<th>Rank</th><th>Model</th><th>Process</th><th>Synthesis</th><th>Factuality</th><th>Total</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><span class="rank-badge rank-1">1</span></td>
+<td><strong>GPT</strong></td>
+<td>7.49</td>
+<td>8.29</td>
+<td>65.78%</td>
+<td><strong>8.29</strong></td>
+</tr>
+<tr class="mirothinker-row">
+<td><span class="rank-badge rank-2">2</span></td>
+<td><strong>MiroThinker v17</strong></td>
+<td>7.60</td>
+<td>8.08</td>
+<td>65.09%</td>
+<td><strong>8.08</strong></td>
+</tr>
+<tr class="mirothinker-row">
+<td><span class="rank-badge rank-3">3</span></td>
+<td><strong>MiroThinker v17 Mini</strong></td>
+<td>7.24</td>
+<td>8.03</td>
+<td>66.76%</td>
+<td><strong>8.03</strong></td>
+</tr>
+<tr>
+<td><span class="rank-badge">4</span></td>
+<td><strong>Gemini</strong></td>
+<td>6.91</td>
+<td>7.77</td>
+<td>65.30%</td>
+<td><strong>7.77</strong></td>
+</tr>
+<tr>
+<td><span class="rank-badge">5</span></td>
+<td><strong>Claude</strong></td>
+<td>7.19</td>
+<td>7.67</td>
+<td>60.32%</td>
+<td><strong>7.67</strong></td>
+</tr>
+<tr>
+<td><span class="rank-badge">6</span></td>
+<td><strong>GLM Turbo</strong></td>
+<td>5.11</td>
+<td>7.61</td>
+<td>63.75%</td>
+<td><strong>7.61</strong></td>
+</tr>
+
+</tbody>
+</table>
+<ul class="overview-notes">
+<li class="overview-notes-item">GPT 在 Process 和 Synthesis 上全面领先，alignment 得分优势尤其显著</li>
+<li class="overview-notes-item">v17 擅长底层系统诊断与架构分析，Mini 擅长快速给出结构化解决方案</li>
+
+</ul>
+</div>
+
+<div class="execution-pattern-section">
+<span class="overline">Execution Patterns</span>
+<h2>模型执行模式与表现观察</h2>
+<p class="exec-para pattern">针对 Programmer 这类问题（分布式训练诊断、推理框架性能回归、RAG 安全与工程优化），所有模型都呈现一套共同的执行模式：收集系统环境信息（版本号、硬件配置、日志片段）→ 按技术栈分层排查（CUDA → NCCL → PyTorch → 应用层）→ 提出假设并验证 → 给出可操作的修复/优化方案。差异主要在于底层排查深度和生产环境适配度。</p>
+<p class="exec-para top-model">表现最好的 <strong>GPT</strong>（总分 8.29）依靠 Synthesis 质量取胜：Synthesis <code>8.29</code>、Process <code>7.49</code> 均为第一，alignment 得分 <code>8.03</code> 显著领先其他模型，Critical Thinking <code>6.7</code> 也处于领先水平。</p>
+<p class="exec-para mirothinker">在这些方面，MiroThinker 系列的 Synthesis 质量已非常接近 GPT（MiroThinker v17: 8.08、MiroThinker v17 Mini: 8.03），MiroThinker v17 的 Factuality 65.1% 与 GPT 差距仅 0.7 个百分点；Search Breadth <code>7.3</code>、Critical Thinking <code>6.9</code> 表现稳健。</p>
+</div>
+
+<div class="ribbon-divider"><span class="ribbon-line"></span><span class="ribbon-dot"></span><span class="ribbon-line"></span></div>
+
+<div class="ko-section-panel">
+<span class="overline">Key Takeaways</span>
+<h2>关键观察</h2>
+<p class="ko-lede">基于 10 道开放式专业查询的评测结果，我们识别出以下共性模式。</p>
+<div class="ko-findings">
+<article class="ko-finding-card ko-good">
+<div class="ko-finding-head">
+<span class="ko-finding-tag">共性优势</span>
+<span class="ko-finding-en">COMMON STRENGTH</span>
+</div>
+<p class="ko-finding-headline">在涉及主流框架（vLLM、LangChain、PyTorch）的问题诊断中，所有模型均能给出结构化的排查方案。成熟的技术栈文档和社区讨论为模型提供了丰富的知识基础。</p>
+<div class="ko-query-callout">
+<div class="ko-query-cap">
+<span class="ko-cap-label">Representative Query</span>
+<span class="ko-cap-id">Q80</span>
+</div>
+<p class="ko-query-body">我们线上用 LangChain 编排一个“文本 + image_url”的多模态调用，最近在压测时发现两类问题：1) token 预算在 LangChain 侧预估与实际服务端返回的 usage 差距很大，导致我们按预算做的截断/降级策略失效（要么过早截断影响效果，要么没截断导致超限/抛错）；2) 安全同事提到 LangChain 生态里出现过“token 计数触发 SSRF 导致上下文预算失真”的讨论，我们担心 image_url 在某些计数/预处理路径里会被拉取，从而引入 SSRF 面。
+
+我现在想做一个跨栈/跨系统的调研与验证：如果要同时避免 SSRF + 保证 token 预算尽可能稳定，我们该选「离线估算」「预下载图片后再转安全引用」「禁用 image_url 解析/计数」哪条路线？以及如何设计可复现的验证方法来量化三者对 token 准确性、端到端延迟、以及 SSRF 风险面的影响？
+
+约束：业务必须支持用户提交外部 URL（不能强制所有客户改成先上传文件），但我们可以在网关/代理层做改写；合规要求不能让服务端/编排层去访问内网地址；我们有 LLM Gateway（自研反向代理）可做 egress 控制、DNS 策略、审计和缓存；线上需要可观测（能解释 token 漂移来自哪里）。
+
+问题希望聚焦：跨层诊断路径 + 集成方案（LangChain/SDK 侧怎么改、Gateway/网络边界怎么加固、如何验证 token 预算与延迟的权衡）。</p>
+<p class="ko-query-metric">6 模型 Synthesis 均值 <strong>8.11</strong>，Factuality 均值 <strong>66.2%</strong>，极差 <strong>0.54</strong>。</p>
+</div>
+<h3 class="ko-sub-heading">各模型在该 Query 的回答摘要</h3>
+<p class="ko-sub-note">按 Synthesis 分数降序。MiroThinker 以紫色色条标注。</p>
+<div class="ko-model-grid">
+<div class="ko-model-tile">
+<div class="ko-tile-head">
+<span class="ko-tile-name">GPT</span>
+</div>
+<div class="ko-tile-scores">
+<span>Proc <b>5.0</b></span>
+<span>Synth <b>8.39</b></span>
+<span>Fact <b>76%</b></span>
+</div>
+<p class="ko-tile-summary">Synthesis 8.39，Coverage 9.0、Insight 0.0，整体表现稳健，fact 76%。</p>
+</div>
+<div class="ko-model-tile">
+<div class="ko-tile-head">
+<span class="ko-tile-name">GLM Turbo</span>
+</div>
+<div class="ko-tile-scores">
+<span>Proc <b>2.4</b></span>
+<span>Synth <b>8.23</b></span>
+<span>Fact <b>66%</b></span>
+</div>
+<p class="ko-tile-summary">Synthesis 8.23，Coverage 8.8、Insight 8.1，整体表现稳健，fact 66%。</p>
+</div>
+<div class="ko-model-tile is-miro">
+<div class="ko-tile-head">
+<span class="ko-tile-name">MiroThinker v17 Mini</span>
+</div>
+<div class="ko-tile-scores">
+<span>Proc <b>7.5</b></span>
+<span>Synth <b>8.23</b></span>
+<span>Fact <b>55%</b></span>
+</div>
+<p class="ko-tile-summary">Synthesis 8.23，Coverage 8.4、Insight 8.1，整体表现稳健，fact 55%。</p>
+</div>
+<div class="ko-model-tile is-miro">
+<div class="ko-tile-head">
+<span class="ko-tile-name">MiroThinker v17</span>
+</div>
+<div class="ko-tile-scores">
+<span>Proc <b>7.6</b></span>
+<span>Synth <b>8.08</b></span>
+<span>Fact <b>78%</b></span>
+</div>
+<p class="ko-tile-summary">Synthesis 8.08，Coverage 8.4、Insight 7.8，整体表现稳健，fact 78%。</p>
+</div>
+<div class="ko-model-tile">
+<div class="ko-tile-head">
+<span class="ko-tile-name">Claude</span>
+</div>
+<div class="ko-tile-scores">
+<span>Proc <b>7.5</b></span>
+<span>Synth <b>7.87</b></span>
+<span>Fact <b>61%</b></span>
+</div>
+<p class="ko-tile-summary">Synthesis 7.87，Insight 8.3，虽低于均值但要素完整，fact 61%。</p>
+</div>
+<div class="ko-model-tile">
+<div class="ko-tile-head">
+<span class="ko-tile-name">Gemini</span>
+</div>
+<div class="ko-tile-scores">
+<span>Proc <b>7.5</b></span>
+<span>Synth <b>7.85</b></span>
+<span>Fact <b>62%</b></span>
+</div>
+<p class="ko-tile-summary">Synthesis 7.85，Insight 7.4，虽低于均值但要素完整，fact 62%。</p>
+</div>
+
+</div>
+<h3 class="ko-sub-heading">为什么 6 个模型都能做好？</h3>
+<div class="ko-why-grid">
+<div class="ko-why-tile">
+<div class="ko-why-tile-title">技术栈文档丰富</div>
+<p class="ko-why-tile-body">PyTorch / vLLM / LangChain 等主流框架有大量官方文档、Issue 和社区讨论，模型训练数据覆盖充分。</p>
+</div>
+<div class="ko-why-tile">
+<div class="ko-why-tile-title">排查模式标准化</div>
+<p class="ko-why-tile-body">系统诊断遵循"环境→日志→假设→验证"的标准流程，模型都已内化这一模式。</p>
+</div>
+<div class="ko-why-tile">
+<div class="ko-why-tile-title">配置参数有限</div>
+<p class="ko-why-tile-body">关键配置项（batch size、grad accum、tensor parallel 等）数量有限且含义明确，模型可以逐一排查。</p>
+</div>
+<div class="ko-why-tile">
+<div class="ko-why-tile-title">社区案例丰富</div>
+<p class="ko-why-tile-body">GitHub Issue、Stack Overflow 等平台有大量类似问题的讨论和解决方案可供参考。</p>
+</div>
+
+</div>
+</article>
+
+<article class="ko-finding-card ko-bad">
+<div class="ko-finding-head">
+<span class="ko-finding-tag">共性瓶颈</span>
+<span class="ko-finding-en">COMMON BOTTLENECK</span>
+</div>
+<p class="ko-finding-headline">在涉及最新版本（nightly build、刚发布的 patch）或需要深入底层实现（CUDA kernel、NCCL 协议）的问题中，模型间分化显著。</p>
+<div class="ko-query-callout">
+<div class="ko-query-cap">
+<span class="ko-cap-label">Representative Query</span>
+<span class="ko-cap-id">Q85</span>
+</div>
+<p class="ko-query-body">在NVIDIA SM100（B100）8卡节点上，vLLM从0.18.0升到0.18.1后，prefill明显回归：同一模型/同一prompt长度下，prefill latency约从45ms涨到85ms，吞吐从~2.1k tok/s降到~1.2k tok/s。环境：CUDA 12.4、Driver 550.xx、PyTorch 2.4、TensorRT-LLM 0.11。注意0.18.1会把SM100的prefill回退到TRT-LLM后端（0.18.0走vLLM CUDA算子）。我想要一个可复现的对比实验设计，并能用Nsight/Profiler把差异定位到具体kernel或TRT layer/tactic（例如attention/GEMM/KV cache拷贝/调度开销）。排查路径该怎么走、关键开关/日志/trace点在哪？（若不纳入“后端切换到TRT-LLM”和CUDA/Nsight层面的kernel对比，就无法解释回归来源，组件并非多余。）</p>
+<p class="ko-query-metric">6 模型 Synthesis 均值 <strong>7.31</strong>，Factuality 均值 <strong>50.6%</strong>，极差 <strong>3.46</strong>。</p>
+</div>
+<h3 class="ko-sub-heading">各模型在该 Query 的回答摘要</h3>
+<p class="ko-sub-note">按 Synthesis 分数降序。MiroThinker 以紫色色条标注。</p>
+<div class="ko-model-grid">
+<div class="ko-model-tile">
+<div class="ko-tile-head">
+<span class="ko-tile-name">Claude</span>
+</div>
+<div class="ko-tile-scores">
+<span>Proc <b>7.4</b></span>
+<span>Synth <b>8.08</b></span>
+<span>Fact <b>43%</b></span>
+</div>
+<p class="ko-tile-summary">Synthesis 8.08 仍维持高水准，Coverage 8.3，fact 43%。</p>
+</div>
+<div class="ko-model-tile">
+<div class="ko-tile-head">
+<span class="ko-tile-name">GPT</span>
+</div>
+<div class="ko-tile-scores">
+<span>Proc <b>7.4</b></span>
+<span>Synth <b>8.05</b></span>
+<span>Fact <b>53%</b></span>
+</div>
+<p class="ko-tile-summary">Synthesis 8.05 仍维持高水准，Coverage 8.5，fact 53%。</p>
+</div>
+<div class="ko-model-tile is-miro">
+<div class="ko-tile-head">
+<span class="ko-tile-name">MiroThinker v17</span>
+</div>
+<div class="ko-tile-scores">
+<span>Proc <b>7.5</b></span>
+<span>Synth <b>7.75</b></span>
+<span>Fact <b>34%</b></span>
+</div>
+<p class="ko-tile-summary">Synthesis 7.75，Coverage 7.8，在该查询上表现中规中矩，fact 34%。</p>
+</div>
+<div class="ko-model-tile">
+<div class="ko-tile-head">
+<span class="ko-tile-name">Gemini</span>
+</div>
+<div class="ko-tile-scores">
+<span>Proc <b>6.9</b></span>
+<span>Synth <b>7.72</b></span>
+<span>Fact <b>56%</b></span>
+</div>
+<p class="ko-tile-summary">Synthesis 7.72，Coverage 7.2，在该查询上表现中规中矩，fact 56%。</p>
+</div>
+<div class="ko-model-tile is-miro">
+<div class="ko-tile-head">
+<span class="ko-tile-name">MiroThinker v17 Mini</span>
+</div>
+<div class="ko-tile-scores">
+<span>Proc <b>7.6</b></span>
+<span>Synth <b>7.62</b></span>
+<span>Fact <b>61%</b></span>
+</div>
+<p class="ko-tile-summary">Synthesis 7.62，Coverage 7.5，在该查询上表现中规中矩，fact 61%。</p>
+</div>
+<div class="ko-model-tile">
+<div class="ko-tile-head">
+<span class="ko-tile-name">GLM Turbo</span>
+</div>
+<div class="ko-tile-scores">
+<span>Proc <b>5.6</b></span>
+<span>Synth <b>4.62</b></span>
+<span>Fact <b>56%</b></span>
+</div>
+<p class="ko-tile-summary">Synthesis 4.62，Coverage 4.8，该查询上表现相对吃力，fact 56%。</p>
+</div>
+
+</div>
+<h3 class="ko-sub-heading">为什么 6 个模型都做不好？</h3>
+<div class="ko-why-grid">
+<div class="ko-why-tile">
+<div class="ko-why-tile-title">版本时效性极强</div>
+<p class="ko-why-tile-body">涉及 PyTorch nightly、vLLM 0.18.1 等最新版本的具体 bug，训练数据可能未覆盖。</p>
+</div>
+<div class="ko-why-tile">
+<div class="ko-why-tile-title">底层实现知识稀疏</div>
+<p class="ko-why-tile-body">CUDA kernel 行为、NCCL 协议细节等底层知识在公开语料中较为稀疏。</p>
+</div>
+<div class="ko-why-tile">
+<div class="ko-why-tile-title">多因素交互复杂</div>
+<p class="ko-why-tile-body">分布式训练问题常涉及硬件 × 框架 × 配置的多因素交互，难以简单匹配已知模式。</p>
+</div>
+<div class="ko-why-tile">
+<div class="ko-why-tile-title">复现路径不明确</div>
+<p class="ko-why-tile-body">问题描述中的"随机 hang""偶发回归"增加了诊断难度，模型倾向给出笼统建议。</p>
+</div>
+
+</div>
+</article>
+
+</div>
+</div>
+
+<div class="ribbon-divider"><span class="ribbon-line"></span><span class="ribbon-dot"></span><span class="ribbon-line"></span></div>
+
+<div class="persona-intro-section">
+<span class="overline">Query Taxonomy</span>
+<h2>Query 类型概要</h2>
+<p class="persona-insight">工程师/程序员角色要求模型具备<strong>全栈系统诊断能力</strong>——不仅要理解单一技术的原理，还需要在分布式系统、ML 训练框架、推理优化等多个技术栈之间建立关联，在版本级精度上定位问题根因，并给出在生产环境中可落地的解决方案。</p>
+<h3>问题类型</h3>
+<div class="qtype-grid">
+<div class="qtype-card">
+<div class="qtype-head">
+<span class="qtype-name">分布式训练诊断</span>
+<span class="qtype-en">Distributed Training Diagnosis</span>
+</div>
+<p class="qtype-desc">定位 DDP/FSDP 训练中的 hang、性能回归、NCCL 通信问题等</p>
+</div>
+<div class="qtype-card">
+<div class="qtype-head">
+<span class="qtype-name">推理框架优化</span>
+<span class="qtype-en">Inference Framework Optimization</span>
+</div>
+<p class="qtype-desc">分析 vLLM/TRT-LLM 等推理框架的性能回归、量化一致性与选型决策</p>
+</div>
+<div class="qtype-card">
+<div class="qtype-head">
+<span class="qtype-name">RAG/LLM 链路工程</span>
+<span class="qtype-en">RAG/LLM Pipeline Engineering</span>
+</div>
+<p class="qtype-desc">解决 LangChain/LlamaIndex 链路中的 token 预算、安全注入、向量库兼容等问题</p>
+</div>
+<div class="qtype-card">
+<div class="qtype-head">
+<span class="qtype-name">评测与标注工程</span>
+<span class="qtype-en">Evaluation & Annotation Engineering</span>
+</div>
+<p class="qtype-desc">解决 lm-eval/OpenCompass 评测不一致、Argilla/Prodigy 标注迁移等工具链问题</p>
+</div>
+
+</div>
+<h3>难度机制</h3>
+<div class="diff-grid">
+<div class="diff-card">
+<div class="diff-head">
+<span class="diff-name">版本敏感性</span>
+</div>
+<p class="diff-desc">涉及特定框架版本（PyTorch nightly、vLLM 0.18.x、NCCL 2.18 等），需要精确的版本级知识</p>
+</div>
+<div class="diff-card">
+<div class="diff-head">
+<span class="diff-name">跨栈追踪能力</span>
+</div>
+<p class="diff-desc">问题横跨多个技术栈（K8s + Python + 向量库 + LLM API），需全链路分析</p>
+</div>
+<div class="diff-card">
+<div class="diff-head">
+<span class="diff-name">生产环境约束</span>
+</div>
+<p class="diff-desc">解决方案必须考虑生产环境的实际约束（多节点、高并发、异步 prefetch），而非理论最优</p>
+</div>
+<div class="diff-card">
+<div class="diff-head">
+<span class="diff-name">底层实现细节</span>
+</div>
+<p class="diff-desc">需要深入到 CUDA kernel、NCCL 协议、内存管理等底层实现才能定位根因</p>
+</div>
+<div class="diff-card">
+<div class="diff-head">
+<span class="diff-name">复现难度高</span>
+</div>
+<p class="diff-desc">部分问题具有随机性（NCCL hang、竞态条件），需要系统化的排查策略</p>
+</div>
+<div class="diff-card">
+<div class="diff-head">
+<span class="diff-name">多方案权衡</span>
+</div>
+<p class="diff-desc">选型和优化决策涉及性能/精度/稳定性的三角权衡，需给出有依据的取舍建议</p>
+</div>
+
+</div>
+</div>
+
+<div class="ribbon-divider"><span class="ribbon-line"></span><span class="ribbon-dot"></span><span class="ribbon-line"></span></div>
+
+<div class="tab-container">
+<div class="tab-buttons">
+<button class="tab-btn active" onclick="switchTab(0)">Q79</button>
+<button class="tab-btn" onclick="switchTab(1)">Q80</button>
+<button class="tab-btn" onclick="switchTab(2)">Q81</button>
+<button class="tab-btn" onclick="switchTab(3)">Q82</button>
+<button class="tab-btn" onclick="switchTab(4)">Q83</button>
+<button class="tab-btn" onclick="switchTab(5)">Q84</button>
+<button class="tab-btn" onclick="switchTab(6)">Q85</button>
+<button class="tab-btn" onclick="switchTab(7)">Q86</button>
+<button class="tab-btn" onclick="switchTab(8)">Q87</button>
+<button class="tab-btn" onclick="switchTab(9)">Q88</button>
+
+</div>
+<div class="tab-content active" id="tab-0">
+<div class="card">
+<details class="query-details">
+<summary>
+<span class="query-summary-label">Query #79</span>
+<span class="query-summary-hint">点击展开原始查询</span>
+<span class="query-summary-chevron">›</span>
+</summary>
+<pre class="query-text">我们在生产训练平台上遇到一个很难复现但影响很大的问题：PyTorch nightly（大概 2025-03-30 之后的某些 nightly）跑 nanogpt 的 DDP 训练会随机 NCCL hang（无报错、进程不退出，卡死在某个 collective 上），同一套代码/集群用 stable 版本基本不出现。
+
+现在的问题不是“怎么排查 hang”（我们当然想查），而是“平台架构/技术选型上该怎么决策”：在业务必须用到 nightly 某些新特性（例如性能/算子/编译链路相关）的前提下，我们应该选哪条路线来最小化训练中断成本？我希望得到的是 2-3 种可落地方案的 trade-off（稳定性/性能/工程成本/可维护性），以及推荐的决策依据（如何系统性缩小根因范围，直到值得投入做 bisect/patch）。
+
+环境简述：
+- 训练：nanogpt（自研分支，逻辑接近公开版），DDP + torchrun，多机多卡
+- 集群：8 台机器 * 8 GPU（总 64 卡），IB（RoCE/IB 二选一都可能，取决于队列），NCCL 通信
+- GPU：A100 80G + H100 混部（按队列分开跑，但软件栈统一）
+- OS/内核：Ubuntu 22.04，内核 5.15
+- CUDA：12.x（驱动由平台统一推，不能频繁回滚）
+- 现象：每 5~20 次训练启动会随机出现一次 hang，可能发生在训练早期或中期；通常只有部分 rank 卡住，其余 rank 在 barrier/某个 all_reduce 等待。
+
+业务约束：
+- 训练作业 SLO：单个 job 24h 内必须稳定跑完；一旦 hang 就会烧 GPU（64 卡）直到被监控杀掉，成本非常高
+- 成本/人力：平台团队 1 人 + 算法 2 人；我们最多愿意投入 3~5 个工作日做排查/规避，无法长期跟 nightly 演进
+- 版本诉求：必须保留 nightly 的某些收益（例如吞吐提升/新算子），否则训练成本会上升 15%~25%
+
+已尝试/已调研（但没有形成确定结论）：
+1) 看了 PyTorch Issue#152623（nightly 随机 NCCL hang 的线索），但目前我们没找到能直接对应到“提交范围—触发条件—修复点/规避方案”的外部证据链（官方文档/已知问题列表/社区经验贴都基本缺失）。
+2) 开启过可观测性：TORCH_DISTRIBUTED_DEBUG=DETAIL、NCCL_DEBUG=INFO（以及部分 NCCL_DEBUG_SUBSYS），能看到卡在某些 collective，但并不能稳定复现，也很难直接指向 PyTorch vs NCCL vs 驱动 vs 网络。
+3) 做过一些常见规避开关尝试：如调整 NCCL_* 环境变量（例如禁用某些传输、改算法/协议等）、更换若干 NCCL 版本组合、调整 socket/IB 相关设置；结论是不稳定：有的配置 hang 频率下降但吞吐大幅下降，有的对 hang 无影响。
+4) 对照测试：同集群同模型，PyTorch stable（例如 2.6.x）基本不 hang；nightly（2025-03-30+）更容易出现。
+
+我现在在考虑的方案（希望你们帮我比较并推荐）：
+方案 A：继续用 nightly，但把“系统性定位根因”纳入平台能力
+- 做 nightly commit range bisect（或者锁定某些日期区间的 wheel），结合 DDP/ProcessGroupNCCL 调用栈、NCCL topo/graph、CUDA driver 版本矩阵，目标是缩小到可提交上游 issue/回滚单个 patch 的粒度。
+- 代价：需要搭建可重复的压力测试、日志收集、拓扑信息快照；短期内仍可能 hang。
+
+方案 B：版本冻结（stable 或已知不 hang 的 nightly）+ backport 必要特性
+- 平台统一 pin 到 stable 或某个“最后一个不 hang”的 nightly，然后把我们必须要的性能改动（如果能隔离）通过源码 patch/backport 或 extension 的方式引入。
+- 代价：维护成本、未来升级风险；且 nightly 的收益未必能干净 backport。
+
+方案 C：通信/并行栈换型来规避（仍用 PyTorch，但绕开 ProcessGroupNCCL 的不稳定路径）
+- 例如改用不同的 backend/实现（如果可行：UCC/SHARP/或其它可替代路径），或者从 DDP 切到 FSDP/ZeRO（改变 collective 模式），或者在任务编排层做“故障自愈 + 快速失败”以降低 hang 的成本。
+- 代价：吞吐/显存/实现复杂度；以及是否真的绕开根因不确定。
+
+核心问题：在上述约束下，平台应该优先选哪条路线？能否给出一个可执行的决策框架：
+- 先用哪些观测/实验把问题归因到 PyTorch 提交回归 vs NCCL 版本差异 vs CUDA 驱动/运行时 vs 网络拓扑/IB 配置？
+- 归因不清时，如何在“稳定性 vs 性能”之间做最小后悔（min-regret）的技术选型？
+
+（如果需要我可以补充：torchrun 启动参数、NCCL debug 片段、发生 hang 时各 rank 的 Python stack、nvidia-smi topo、IB/RDMA 计数器等）</pre>
+</details>
+<div class="db-card">
+<div class="db-header">
+<span class="overline">Score Distribution</span>
+<h4>各维度模型得分分布</h4>
+<p class="db-hint">每个维度上，各模型的得分点位。
+<span class="db-legend-dot db-legend-miro"></span>MiroThinker
+<span class="db-legend-dot db-legend-other"></span>Other models</p>
+</div>
+<div class="db-grid">
+<div class="db-row">
+<span class="db-label">Process</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:86.0%;--row:2"><span class="db-connector"></span><span class="db-name">GPT 7.6</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:3"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.8</span></span>
+<span class="db-dot db-dot-miro" style="left:78.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 7.5</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 6.4</span></span>
+<span class="db-dot" style="left:78.0%;--row:1"><span class="db-connector"></span><span class="db-name">Claude 7.5</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:1"><span class="db-connector"></span><span class="db-name">GLM 6.4</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Synthesis</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:1"><span class="db-connector"></span><span class="db-name">GPT 8.2</span></span>
+<span class="db-dot db-dot-miro" style="left:74.4%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.9</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:92.8%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 8.2</span></span>
+<span class="db-dot" style="left:55.2%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 7.6</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 6.8</span></span>
+<span class="db-dot" style="left:39.3%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 7.3</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Factuality</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 46.2</span></span>
+<span class="db-dot db-dot-miro" style="left:63.1%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT v17 58.4</span></span>
+<span class="db-dot db-dot-miro" style="left:82.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 62.5</span></span>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:1"><span class="db-connector"></span><span class="db-name">Gemini 65.1</span></span>
+<span class="db-dot" style="left:54.9%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 56.7</span></span>
+<span class="db-dot" style="left:68.4%;--row:2"><span class="db-connector"></span><span class="db-name">GLM 59.6</span></span>
+
+</div></div>
+</div>
+</div>
+</div>
+<h3>Process Evaluation Details</h3>
+<table class="score-table">
+<thead><tr><th>Model</th><th>Search Breadth</th><th>Analytical Depth</th><th>Progressive Refinement</th><th>Critical Thinking</th><th>Efficiency</th><th>Findings→Synthesis</th><th>Synthesis→Process</th><th>Contradiction</th></tr></thead>
+<tbody>
+<tr><td><strong>GPT</strong></td><td>8</td><td>7</td><td>8</td><td>6</td><td>7</td><td>9</td><td>7</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17</strong></td><td>7</td><td>7</td><td>8</td><td>6</td><td>8</td><td>9</td><td>7</td><td>10</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17 Mini</strong></td><td>6</td><td>7</td><td>8</td><td>7</td><td>7</td><td>9</td><td>7</td><td>9</td></tr>
+<tr><td><strong>Gemini</strong></td><td>7</td><td>6</td><td>8</td><td>5</td><td>6</td><td>8</td><td>4</td><td>7</td></tr>
+<tr><td><strong>Claude</strong></td><td>9</td><td>7</td><td>8</td><td>6</td><td>7</td><td>9</td><td>6</td><td>8</td></tr>
+<tr><td><strong>GLM Turbo</strong></td><td>3</td><td>7</td><td>5</td><td>4</td><td>6</td><td>9</td><td>7</td><td>10</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+<div class="tab-content" id="tab-1">
+<div class="card">
+<details class="query-details">
+<summary>
+<span class="query-summary-label">Query #80</span>
+<span class="query-summary-hint">点击展开原始查询</span>
+<span class="query-summary-chevron">›</span>
+</summary>
+<pre class="query-text">我们线上用 LangChain 编排一个“文本 + image_url”的多模态调用，最近在压测时发现两类问题：1) token 预算在 LangChain 侧预估与实际服务端返回的 usage 差距很大，导致我们按预算做的截断/降级策略失效（要么过早截断影响效果，要么没截断导致超限/抛错）；2) 安全同事提到 LangChain 生态里出现过“token 计数触发 SSRF 导致上下文预算失真”的讨论，我们担心 image_url 在某些计数/预处理路径里会被拉取，从而引入 SSRF 面。
+
+我现在想做一个跨栈/跨系统的调研与验证：如果要同时避免 SSRF + 保证 token 预算尽可能稳定，我们该选「离线估算」「预下载图片后再转安全引用」「禁用 image_url 解析/计数」哪条路线？以及如何设计可复现的验证方法来量化三者对 token 准确性、端到端延迟、以及 SSRF 风险面的影响？
+
+约束：业务必须支持用户提交外部 URL（不能强制所有客户改成先上传文件），但我们可以在网关/代理层做改写；合规要求不能让服务端/编排层去访问内网地址；我们有 LLM Gateway（自研反向代理）可做 egress 控制、DNS 策略、审计和缓存；线上需要可观测（能解释 token 漂移来自哪里）。
+
+问题希望聚焦：跨层诊断路径 + 集成方案（LangChain/SDK 侧怎么改、Gateway/网络边界怎么加固、如何验证 token 预算与延迟的权衡）。</pre>
+</details>
+<div class="db-card">
+<div class="db-header">
+<span class="overline">Score Distribution</span>
+<h4>各维度模型得分分布</h4>
+<p class="db-hint">每个维度上，各模型的得分点位。
+<span class="db-legend-dot db-legend-miro"></span>MiroThinker
+<span class="db-legend-dot db-legend-other"></span>Other models</p>
+</div>
+<div class="db-grid">
+<div class="db-row">
+<span class="db-label">Process</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:50.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 5.0</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:3"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.6</span></span>
+<span class="db-dot db-dot-miro" style="left:91.9%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 7.5</span></span>
+<span class="db-dot" style="left:91.9%;--row:1"><span class="db-connector"></span><span class="db-name">Gemini 7.5</span></span>
+<span class="db-dot" style="left:91.9%;--row:2"><span class="db-connector"></span><span class="db-name">Claude 7.5</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 2.4</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Synthesis</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 8.4</span></span>
+<span class="db-dot db-dot-miro" style="left:44.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 8.1</span></span>
+<span class="db-dot db-dot-miro" style="left:68.3%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 8.2</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 7.9</span></span>
+<span class="db-dot" style="left:9.1%;--row:1"><span class="db-connector"></span><span class="db-name">Claude 7.9</span></span>
+<span class="db-dot" style="left:68.8%;--row:1"><span class="db-connector"></span><span class="db-name">GLM 8.2</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Factuality</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:88.4%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 76.3</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT v17 77.8</span></span>
+<span class="db-dot db-dot-miro db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 55.0</span></span>
+<span class="db-dot" style="left:32.4%;--row:1"><span class="db-connector"></span><span class="db-name">Gemini 61.8</span></span>
+<span class="db-dot" style="left:27.4%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 60.5</span></span>
+<span class="db-dot" style="left:48.3%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 66.0</span></span>
+
+</div></div>
+</div>
+</div>
+</div>
+<h3>Process Evaluation Details</h3>
+<table class="score-table">
+<thead><tr><th>Model</th><th>Search Breadth</th><th>Analytical Depth</th><th>Progressive Refinement</th><th>Critical Thinking</th><th>Efficiency</th><th>Findings→Synthesis</th><th>Synthesis→Process</th><th>Contradiction</th></tr></thead>
+<tbody>
+<tr><td><strong>GPT</strong></td><td>7</td><td>2</td><td>4</td><td>3</td><td>4</td><td>7</td><td>5</td><td>8</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17</strong></td><td>7</td><td>8</td><td>8</td><td>7</td><td>6</td><td>9</td><td>7</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17 Mini</strong></td><td>8</td><td>7</td><td>8</td><td>7</td><td>6</td><td>9</td><td>6</td><td>9</td></tr>
+<tr><td><strong>Gemini</strong></td><td>8</td><td>8</td><td>9</td><td>7</td><td>7</td><td>8</td><td>6</td><td>7</td></tr>
+<tr><td><strong>Claude</strong></td><td>9</td><td>7</td><td>8</td><td>7</td><td>6</td><td>9</td><td>6</td><td>8</td></tr>
+<tr><td><strong>GLM Turbo</strong></td><td>2</td><td>2</td><td>2</td><td>3</td><td>2</td><td>4</td><td>2</td><td>2</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+<div class="tab-content" id="tab-2">
+<div class="card">
+<details class="query-details">
+<summary>
+<span class="query-summary-label">Query #81</span>
+<span class="query-summary-hint">点击展开原始查询</span>
+<span class="query-summary-chevron">›</span>
+</summary>
+<pre class="query-text">我们在生产里用 Qdrant 1.17.1 扛高频 upsert（向量检索 + payload filter），最近按发布说明思路打开了“Defer point updates + prevent_unoptimized”（目的：减少频繁 re-optimization 造成的尾延迟抖动）。现在抖动确实变小了，但写放大明显上升，而且 P99 仍会周期性尖刺。
+
+环境/业务约束：
+- Qdrant：1.17.1，K8s 部署（3 节点，replication=2），每个节点 16C/64G，数据盘为本地 NVMe（ext4）
+- collection：约 3,000 万点，向量维度 768，HNSW + payload 索引（payload 里有 2-3 个常用 filter 字段）
+- 写入：Python gRPC client（async），持续 upsert（包含更新已有点的 payload + vector），平均 2,500~3,500 points/s
+- 查询：REST/gRPC 混合，QPS 400~700，topK=20，带 payload filter，业务要求 P99 &lt; 120ms（最好 &lt; 80ms）
+
+现象（开启 defer/prevent_unoptimized 之后）：
+- 查询延迟：P50 约 18~25ms；P95 约 60~90ms；但 P99 每隔 2~5 分钟会从 ~90ms 抬到 250~600ms（持续 10~30s），偶尔出现 1s+ 尖刺
+- 吞吐：查询 QPS 基本稳定，但尖刺期间会出现 3~8% 的 5xx（主要是 upstream timeout）
+- 资源：CPU 在尖刺期间从 ~55% 拉到 85% 左右；磁盘写入从 ~120MB/s 上升到 300~450MB/s；iowait 会到 8~15%
+- 我们怀疑 defer 把点更新“攒”起来后，flush/segment 合并/索引更新会在某些阈值触发时集中爆发，导致后台任务和查询抢资源，从而产生 P99 尖刺，同时写放大变大（更多临时段/合并写）。
+
+已尝试（排除常见手段）：
+1) 只调客户端 batch/并发：batch 从 64/128/256 都试过，并发从 8~32 调过；结果是 batch 小时 CPU/网络开销大，batch 大时 P99 尖刺更明显（且偶发 gRPC message too large）。整体没有稳定把 P99 压到 &lt;120ms。
+2) 调高服务端优化线程/资源：把 max_optimization_threads（以及 pod CPU limit）拉高，尖刺持续时间变短但峰值更高（更像集中跑完），磁盘写放大更严重。
+3) 拆分 collection / 增加 shard：从 2 shard 提到 6 shard 后，平均延迟略降，但尖刺仍存在，只是尖刺更“碎”（更频繁、更短）。
+
+我现在的核心问题是：
+在启用 Defer point updates + prevent_unoptimized 的前提下，如何“系统化”地确定：
+- 延迟窗口（defer 的时间窗口）或批量阈值（积累多少更新触发 flush/索引更新）
+- segment 相关配置（例如 segment 大小/数量上限、memmap/indexing 阈值、payload 索引相关阈值等）
+以最小化查询 P99 抖动，同时不显著增加写放大（磁盘写入、compaction 写量、WAL/flush 次数）。
+
+我希望得到的是：
+- 调参路径/实验设计：应该固定哪些变量、观测哪些指标（例如 segment 数量变化、optimizer/flush 时间、WAL 增长率、compaction 写入量、HNSW rebuild 次数等），如何判断瓶颈在“集中索引更新”还是“段合并 IO”还是“payload 索引维护”
+- 有没有经验性的目标区间/预期收益：例如把 P99 从 300~600ms 尖刺压到 &lt;150ms，同时把磁盘写从 450MB/s 降回 &lt;200MB/s 这种量级是否现实
+
+另外叠加一个干扰点：我们同事用 AI 生成了一段客户端写入的流控代码，感觉可能在 defer 场景下会把服务端推到某个‘阈值触发点’导致尖刺（例如瞬时并发过高/批次过大），但我不确定该如何验证它是不是根因之一。是否有推荐的客户端侧节流策略（按 Qdrant 端指标自适应）？</pre>
+</details>
+<div class="db-card">
+<div class="db-header">
+<span class="overline">Score Distribution</span>
+<h4>各维度模型得分分布</h4>
+<p class="db-hint">每个维度上，各模型的得分点位。
+<span class="db-legend-dot db-legend-miro"></span>MiroThinker
+<span class="db-legend-dot db-legend-other"></span>Other models</p>
+</div>
+<div class="db-grid">
+<div class="db-row">
+<span class="db-label">Process</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 7.5</span></span>
+<span class="db-dot db-dot-miro" style="left:79.3%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.2</span></span>
+<span class="db-dot db-dot-miro" style="left:42.7%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 6.6</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 6.0</span></span>
+<span class="db-dot" style="left:20.7%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 6.2</span></span>
+<span class="db-dot" style="left:50.0%;--row:1"><span class="db-connector"></span><span class="db-name">GLM 6.8</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Synthesis</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:73.5%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 8.3</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 8.4</span></span>
+<span class="db-dot db-dot-miro" style="left:45.5%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 8.0</span></span>
+<span class="db-dot" style="left:54.6%;--row:1"><span class="db-connector"></span><span class="db-name">Gemini 8.1</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 7.7</span></span>
+<span class="db-dot" style="left:25.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 7.9</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Factuality</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:53.4%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 50.0</span></span>
+<span class="db-dot db-dot-miro" style="left:71.1%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 55.6</span></span>
+<span class="db-dot db-dot-miro db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 35.1</span></span>
+<span class="db-dot" style="left:78.9%;--row:2"><span class="db-connector"></span><span class="db-name">Gemini 58.0</span></span>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 62.7</span></span>
+<span class="db-dot" style="left:71.1%;--row:1"><span class="db-connector"></span><span class="db-name">GLM 55.6</span></span>
+
+</div></div>
+</div>
+</div>
+</div>
+<h3>Process Evaluation Details</h3>
+<table class="score-table">
+<thead><tr><th>Model</th><th>Search Breadth</th><th>Analytical Depth</th><th>Progressive Refinement</th><th>Critical Thinking</th><th>Efficiency</th><th>Findings→Synthesis</th><th>Synthesis→Process</th><th>Contradiction</th></tr></thead>
+<tbody>
+<tr><td><strong>GPT</strong></td><td>6</td><td>7</td><td>8</td><td>7</td><td>7</td><td>9</td><td>7</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17</strong></td><td>7</td><td>7</td><td>8</td><td>6</td><td>7</td><td>9</td><td>6</td><td>8</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17 Mini</strong></td><td>7</td><td>6</td><td>7</td><td>7</td><td>6</td><td>8</td><td>5</td><td>7</td></tr>
+<tr><td><strong>Gemini</strong></td><td>6</td><td>6</td><td>7</td><td>5</td><td>6</td><td>8</td><td>4</td><td>6</td></tr>
+<tr><td><strong>Claude</strong></td><td>8</td><td>6</td><td>7</td><td>6</td><td>6</td><td>7</td><td>4</td><td>6</td></tr>
+<tr><td><strong>GLM Turbo</strong></td><td>3</td><td>7</td><td>7</td><td>6</td><td>8</td><td>9</td><td>6</td><td>8</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+<div class="tab-content" id="tab-3">
+<div class="card">
+<details class="query-details">
+<summary>
+<span class="query-summary-label">Query #82</span>
+<span class="query-summary-hint">点击展开原始查询</span>
+<span class="query-summary-chevron">›</span>
+</summary>
+<pre class="query-text">我们在生产 RAG 链路里用 LangChain（Python）做“检索→拼上下文→PromptTemplate 渲染→Chat Model”，最近做安全 review 时担心一类间接 prompt injection：检索结果本身包含看起来像 Python format/f-string 的 `{...}` 片段（例如 `{user.__class__}`、`{obj.__init__.__globals__}`、或构造性的大括号/字段名），当我们把检索到的文档内容直接拼到 template 字符串里再 `.invoke()` 时，会不会被 LangChain 的模板渲染当成“可解释的字段/属性访问”，从而出现：
+
+1) 异常属性访问/表达式解析导致 KeyError/AttributeError，或者更糟糕的敏感对象泄露（类似把不可信字符串当模板解释的风险，想到历史上 Log4Shell CVE-2021-44228 这种“字符串被解释导致严重后果”的安全事件）；
+2) 不同 template_format / 不同 LangChain 组件（PromptTemplate vs ChatPromptTemplate，或 f-string vs jinja2）在遇到恶意 `{...}` 时渲染行为差异，导致某些链路静默降级/吞异常；
+3) 渲染后 prompt 意外变长（token 爆涨）并触发模型侧上下文截断，但截断点/是否发生截断在 LangChain 抽象层里不易观测，最终影响召回内容是否还在、以及答案一致性。
+
+我想要一个“影响评估 + 修复方案”的结论：哪些使用方式会触发该风险（例如把 docs 直接拼进 template vs 作为变量传入 `{context}`），怎么做最小可复现实验去量化 token 爆涨/静默截断对最终回答一致性的影响，并给出工程上可落地的修复/缓解策略（包括如何验证修复有效）。
+
+环境：Python 3.11，langchain 0.1.x（可升级），向量库 FAISS/Deep Lake 都有，模型用 OpenAI/Anthropic 的 chat models（通过 LangChain integrations）。业务约束：检索文档来自用户可编辑知识库，无法保证文本不含 `{}` 或类似模板片段；不能简单“禁用大括号”，因为很多真实文档包含代码/JSON。
+
+示例代码（我们目前就是这种拼接方式，怀疑问题在这里）：
+```python
+from langchain_core.prompts import PromptTemplate
+
+# docs_text 来自 retriever，可能含恶意片段，比如：&quot;... {user.__class__} ...&quot; 或 &quot;{foo[bar]}&quot; 或大量未闭合大括号
+prompt_str = (
+  &quot;You are a helpful assistant.\n&quot;
+  &quot;Use the following context to answer.\n&quot;
+  &quot;---CONTEXT---\n&quot;
+  + docs_text +
+  &quot;\n---\n&quot;
+  &quot;Question: {question}\n&quot;
+)
+
+prompt = PromptTemplate.from_template(prompt_str)  # 默认 template_format
+
+chain = prompt | llm
+out = chain.invoke({&quot;question&quot;: question})
+```
+
+核心问题：请问在 LangChain 里这种模式是否会把 `docs_text` 里的 `{...}` 当成模板字段解析（从而产生异常属性访问/渲染差异/信息泄露或 DoS 风险），具体影响面怎么界定，应该如何修复（escape、改用安全模板、把上下文作为变量而不是拼 template、或别的做法），以及如何设计可复现实验与指标（token、截断点、召回保持率、答案一致性）来量化风险？</pre>
+</details>
+<div class="db-card">
+<div class="db-header">
+<span class="overline">Score Distribution</span>
+<h4>各维度模型得分分布</h4>
+<p class="db-hint">每个维度上，各模型的得分点位。
+<span class="db-legend-dot db-legend-miro"></span>MiroThinker
+<span class="db-legend-dot db-legend-other"></span>Other models</p>
+</div>
+<div class="db-grid">
+<div class="db-row">
+<span class="db-label">Process</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 8.0</span></span>
+<span class="db-dot db-dot-miro db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 6.6</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:1"><span class="db-connector"></span><span class="db-name">Gemini 6.6</span></span>
+<span class="db-dot" style="left:30.0%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 7.0</span></span>
+<span class="db-dot" style="left:70.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 7.6</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Synthesis</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:80.8%;--row:1"><span class="db-connector"></span><span class="db-name">GPT 8.2</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 8.4</span></span>
+<span class="db-dot db-dot-miro" style="left:62.4%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 8.1</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 7.5</span></span>
+<span class="db-dot" style="left:16.9%;--row:1"><span class="db-connector"></span><span class="db-name">Claude 7.6</span></span>
+<span class="db-dot" style="left:74.8%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 8.2</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Factuality</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 89.4</span></span>
+<span class="db-dot db-dot-miro" style="left:21.3%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 83.0</span></span>
+<span class="db-dot db-dot-miro" style="left:56.8%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 86.1</span></span>
+<span class="db-dot" style="left:43.7%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 85.0</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 81.6</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:1"><span class="db-connector"></span><span class="db-name">GLM 81.6</span></span>
+
+</div></div>
+</div>
+</div>
+</div>
+<h3>Process Evaluation Details</h3>
+<table class="score-table">
+<thead><tr><th>Model</th><th>Search Breadth</th><th>Analytical Depth</th><th>Progressive Refinement</th><th>Critical Thinking</th><th>Efficiency</th><th>Findings→Synthesis</th><th>Synthesis→Process</th><th>Contradiction</th></tr></thead>
+<tbody>
+<tr><td><strong>GPT</strong></td><td>8</td><td>8</td><td>9</td><td>7</td><td>8</td><td>9</td><td>6</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17</strong></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17 Mini</strong></td><td>8</td><td>6</td><td>7</td><td>7</td><td>6</td><td>8</td><td>5</td><td>6</td></tr>
+<tr><td><strong>Gemini</strong></td><td>7</td><td>6</td><td>7</td><td>6</td><td>4</td><td>9</td><td>6</td><td>8</td></tr>
+<tr><td><strong>Claude</strong></td><td>8</td><td>7</td><td>7</td><td>6</td><td>6</td><td>8</td><td>6</td><td>8</td></tr>
+<tr><td><strong>GLM Turbo</strong></td><td>7</td><td>8</td><td>8</td><td>7</td><td>6</td><td>9</td><td>7</td><td>9</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+<div class="tab-content" id="tab-4">
+<div class="card">
+<details class="query-details">
+<summary>
+<span class="query-summary-label">Query #83</span>
+<span class="query-summary-hint">点击展开原始查询</span>
+<span class="query-summary-chevron">›</span>
+</summary>
+<pre class="query-text">在 K8s(3 节点 c6i.4xlarge) 上跑 LlamaIndex 0.10.37 + Python3.11，Embedding 用 OpenAI 兼容网关(openai==1.30)，向量库 Milvus 2.4。引入 token-bucket(5 RPS/60k TPM) 后 429 明显下降，但仍偶发“Embedding 缺失/召回波动”：同一批 5 万文档应写入约 12 万向量，实际仅 11.8 万；写完立刻检索 recall@10 在 0.72~0.85 间跳。日志无明显异常，偶见请求超时但重试后也未报错。已排除网络抖动、重复 ID 覆盖、等待索引刷新(延迟 10min) 仍波动。如何定位根因是限流参数导致静默丢批、重试/超时语义、批量切分并发，还是 Milvus 并发 upsert/一致性造成写后读不稳定？希望给一个可复现实验设计与分层排查路径(需要打哪些 LlamaIndex 回调/HTTP/DB 指标)。</pre>
+</details>
+<div class="db-card">
+<div class="db-header">
+<span class="overline">Score Distribution</span>
+<h4>各维度模型得分分布</h4>
+<p class="db-hint">每个维度上，各模型的得分点位。
+<span class="db-legend-dot db-legend-miro"></span>MiroThinker
+<span class="db-legend-dot db-legend-other"></span>Other models</p>
+</div>
+<div class="db-grid">
+<div class="db-row">
+<span class="db-label">Process</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:3"><span class="db-connector"></span><span class="db-name">GPT 8.1</span></span>
+<span class="db-dot db-dot-miro" style="left:84.2%;--row:2"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.8</span></span>
+<span class="db-dot db-dot-miro" style="left:81.0%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 7.6</span></span>
+<span class="db-dot" style="left:64.7%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 7.0</span></span>
+<span class="db-dot" style="left:77.7%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 7.5</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 4.8</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Synthesis</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 8.7</span></span>
+<span class="db-dot db-dot-miro" style="left:60.9%;--row:2"><span class="db-connector"></span><span class="db-name is-miro">MT v17 8.2</span></span>
+<span class="db-dot db-dot-miro" style="left:54.5%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 8.1</span></span>
+<span class="db-dot" style="left:50.2%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 8.0</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 7.4</span></span>
+<span class="db-dot" style="left:30.3%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 7.8</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Factuality</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 75.6</span></span>
+<span class="db-dot db-dot-miro" style="left:41.8%;--row:2"><span class="db-connector"></span><span class="db-name is-miro">MT v17 64.3</span></span>
+<span class="db-dot db-dot-miro" style="left:68.1%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 70.0</span></span>
+<span class="db-dot" style="left:39.5%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 63.8</span></span>
+<span class="db-dot" style="left:40.0%;--row:1"><span class="db-connector"></span><span class="db-name">Claude 63.9</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 56.5</span></span>
+
+</div></div>
+</div>
+</div>
+</div>
+<h3>Process Evaluation Details</h3>
+<table class="score-table">
+<thead><tr><th>Model</th><th>Search Breadth</th><th>Analytical Depth</th><th>Progressive Refinement</th><th>Critical Thinking</th><th>Efficiency</th><th>Findings→Synthesis</th><th>Synthesis→Process</th><th>Contradiction</th></tr></thead>
+<tbody>
+<tr><td><strong>GPT</strong></td><td>8</td><td>8</td><td>9</td><td>8</td><td>7</td><td>9</td><td>7</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17</strong></td><td>7</td><td>8</td><td>8</td><td>7</td><td>7</td><td>9</td><td>7</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17 Mini</strong></td><td>8</td><td>6</td><td>7</td><td>7</td><td>6</td><td>9</td><td>8</td><td>10</td></tr>
+<tr><td><strong>Gemini</strong></td><td>7</td><td>7</td><td>8</td><td>6</td><td>5</td><td>9</td><td>6</td><td>8</td></tr>
+<tr><td><strong>Claude</strong></td><td>9</td><td>8</td><td>7</td><td>7</td><td>6</td><td>9</td><td>6</td><td>8</td></tr>
+<tr><td><strong>GLM Turbo</strong></td><td>3</td><td>4</td><td>4</td><td>4</td><td>3</td><td>8</td><td>4</td><td>8</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+<div class="tab-content" id="tab-5">
+<div class="card">
+<details class="query-details">
+<summary>
+<span class="query-summary-label">Query #84</span>
+<span class="query-summary-hint">点击展开原始查询</span>
+<span class="query-summary-chevron">›</span>
+</summary>
+<pre class="query-text">在 2 节点×8*A100-80G 上跑 PyTorch 2.4 + NCCL 2.18，模型用 FSDP2（fully_shard）并开启“激活异步 prefetch + CPU offload”后，吞吐从 115 it/s 掉到 38 it/s，且偶发卡在 step 0/1（无报错，NCCL 看起来在等 all_gather）。关掉 async prefetch 一切正常。已确认按文档 FSDP 会搬运输入到 GPU，但 profiler 里出现大量 CPU-&gt;GPU memcpy、偶发 stream synchronize。请问如何用 torch.profiler + Nsight Systems/NCCL trace 判定根因是 pin 内存/CPU 拷贝、current device/mesh device 不一致引入隐式同步，还是 all_gather 竞争导致 prefetch 不重叠？以及对应的修复策略/开关组合应怎么选？</pre>
+</details>
+<div class="db-card">
+<div class="db-header">
+<span class="overline">Score Distribution</span>
+<h4>各维度模型得分分布</h4>
+<p class="db-hint">每个维度上，各模型的得分点位。
+<span class="db-legend-dot db-legend-miro"></span>MiroThinker
+<span class="db-legend-dot db-legend-other"></span>Other models</p>
+</div>
+<div class="db-grid">
+<div class="db-row">
+<span class="db-label">Process</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 7.9</span></span>
+<span class="db-dot db-dot-miro" style="left:81.4%;--row:2"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.5</span></span>
+<span class="db-dot db-dot-miro" style="left:73.0%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 7.2</span></span>
+<span class="db-dot" style="left:68.9%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 7.1</span></span>
+<span class="db-dot" style="left:56.3%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 6.8</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 5.2</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Synthesis</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 8.6</span></span>
+<span class="db-dot db-dot-miro" style="left:45.4%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 8.0</span></span>
+<span class="db-dot db-dot-miro" style="left:57.7%;--row:2"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 8.1</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 7.4</span></span>
+<span class="db-dot" style="left:8.9%;--row:1"><span class="db-connector"></span><span class="db-name">Claude 7.5</span></span>
+<span class="db-dot" style="left:47.6%;--row:1"><span class="db-connector"></span><span class="db-name">GLM 8.0</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Factuality</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:45.6%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 78.3</span></span>
+<span class="db-dot db-dot-miro" style="left:60.8%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 81.2</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 87.8</span></span>
+<span class="db-dot" style="left:48.6%;--row:1"><span class="db-connector"></span><span class="db-name">Gemini 78.8</span></span>
+<span class="db-dot" style="left:23.5%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 73.9</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 70.5</span></span>
+
+</div></div>
+</div>
+</div>
+</div>
+<h3>Process Evaluation Details</h3>
+<table class="score-table">
+<thead><tr><th>Model</th><th>Search Breadth</th><th>Analytical Depth</th><th>Progressive Refinement</th><th>Critical Thinking</th><th>Efficiency</th><th>Findings→Synthesis</th><th>Synthesis→Process</th><th>Contradiction</th></tr></thead>
+<tbody>
+<tr><td><strong>GPT</strong></td><td>8</td><td>8</td><td>8</td><td>7</td><td>7</td><td>9</td><td>7</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17</strong></td><td>7</td><td>7</td><td>8</td><td>7</td><td>6</td><td>9</td><td>7</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17 Mini</strong></td><td>8</td><td>6</td><td>7</td><td>6</td><td>6</td><td>9</td><td>7</td><td>9</td></tr>
+<tr><td><strong>Gemini</strong></td><td>6</td><td>7</td><td>8</td><td>6</td><td>7</td><td>8</td><td>6</td><td>9</td></tr>
+<tr><td><strong>Claude</strong></td><td>8</td><td>6</td><td>7</td><td>6</td><td>6</td><td>8</td><td>5</td><td>8</td></tr>
+<tr><td><strong>GLM Turbo</strong></td><td>2</td><td>3</td><td>4</td><td>2</td><td>7</td><td>9</td><td>6</td><td>9</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+<div class="tab-content" id="tab-6">
+<div class="card">
+<details class="query-details">
+<summary>
+<span class="query-summary-label">Query #85</span>
+<span class="query-summary-hint">点击展开原始查询</span>
+<span class="query-summary-chevron">›</span>
+</summary>
+<pre class="query-text">在NVIDIA SM100（B100）8卡节点上，vLLM从0.18.0升到0.18.1后，prefill明显回归：同一模型/同一prompt长度下，prefill latency约从45ms涨到85ms，吞吐从~2.1k tok/s降到~1.2k tok/s。环境：CUDA 12.4、Driver 550.xx、PyTorch 2.4、TensorRT-LLM 0.11。注意0.18.1会把SM100的prefill回退到TRT-LLM后端（0.18.0走vLLM CUDA算子）。我想要一个可复现的对比实验设计，并能用Nsight/Profiler把差异定位到具体kernel或TRT layer/tactic（例如attention/GEMM/KV cache拷贝/调度开销）。排查路径该怎么走、关键开关/日志/trace点在哪？（若不纳入“后端切换到TRT-LLM”和CUDA/Nsight层面的kernel对比，就无法解释回归来源，组件并非多余。）</pre>
+</details>
+<div class="db-card">
+<div class="db-header">
+<span class="overline">Score Distribution</span>
+<h4>各维度模型得分分布</h4>
+<p class="db-hint">每个维度上，各模型的得分点位。
+<span class="db-legend-dot db-legend-miro"></span>MiroThinker
+<span class="db-legend-dot db-legend-other"></span>Other models</p>
+</div>
+<div class="db-grid">
+<div class="db-row">
+<span class="db-label">Process</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:83.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 7.4</span></span>
+<span class="db-dot db-dot-miro" style="left:88.5%;--row:2"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.5</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:3"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 7.6</span></span>
+<span class="db-dot" style="left:61.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 6.9</span></span>
+<span class="db-dot" style="left:83.0%;--row:1"><span class="db-connector"></span><span class="db-name">Claude 7.4</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 5.6</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Synthesis</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:93.3%;--row:3"><span class="db-connector"></span><span class="db-name">GPT 8.1</span></span>
+<span class="db-dot db-dot-miro" style="left:85.6%;--row:2"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.7</span></span>
+<span class="db-dot db-dot-miro" style="left:82.2%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 7.6</span></span>
+<span class="db-dot" style="left:84.9%;--row:1"><span class="db-connector"></span><span class="db-name">Gemini 7.7</span></span>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:4"><span class="db-connector"></span><span class="db-name">Claude 8.1</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 4.6</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Factuality</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:68.3%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 53.2</span></span>
+<span class="db-dot db-dot-miro db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 34.3</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 61.0</span></span>
+<span class="db-dot" style="left:78.4%;--row:2"><span class="db-connector"></span><span class="db-name">Gemini 56.2</span></span>
+<span class="db-dot" style="left:35.8%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 43.3</span></span>
+<span class="db-dot" style="left:76.1%;--row:1"><span class="db-connector"></span><span class="db-name">GLM 55.6</span></span>
+
+</div></div>
+</div>
+</div>
+</div>
+<h3>Process Evaluation Details</h3>
+<table class="score-table">
+<thead><tr><th>Model</th><th>Search Breadth</th><th>Analytical Depth</th><th>Progressive Refinement</th><th>Critical Thinking</th><th>Efficiency</th><th>Findings→Synthesis</th><th>Synthesis→Process</th><th>Contradiction</th></tr></thead>
+<tbody>
+<tr><td><strong>GPT</strong></td><td>7</td><td>7</td><td>8</td><td>7</td><td>7</td><td>8</td><td>6</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17</strong></td><td>8</td><td>7</td><td>8</td><td>7</td><td>6</td><td>9</td><td>6</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17 Mini</strong></td><td>8</td><td>6</td><td>8</td><td>6</td><td>6</td><td>9</td><td>8</td><td>10</td></tr>
+<tr><td><strong>Gemini</strong></td><td>8</td><td>7</td><td>7</td><td>6</td><td>5</td><td>8</td><td>5</td><td>9</td></tr>
+<tr><td><strong>Claude</strong></td><td>8</td><td>7</td><td>8</td><td>6</td><td>7</td><td>9</td><td>6</td><td>8</td></tr>
+<tr><td><strong>GLM Turbo</strong></td><td>4</td><td>6</td><td>5</td><td>5</td><td>4</td><td>7</td><td>6</td><td>8</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+<div class="tab-content" id="tab-7">
+<div class="card">
+<details class="query-details">
+<summary>
+<span class="query-summary-label">Query #86</span>
+<span class="query-summary-hint">点击展开原始查询</span>
+<span class="query-summary-chevron">›</span>
+</summary>
+<pre class="query-text">我们在做推理框架选型，核心纠结点是：NVFP4/FP8 低精度量化 checkpoint 在 vLLM、TensorRT-LLM（以及 vLLM 内部可能走到的 trtllm_moe 等路径）之间，数值/行为一致性到底怎么评估和怎么做回归门禁，才能在上线后不被“同一模型不同后端精度掉点/行为异常”坑到？
+
+背景：最近遇到类似 Issue#36094 的现象——Qwen3.5 NVFP4 量化 checkpoint 在 vLLM 上表现异常偏低（离线/在线指标都掉），但在另一条 TensorRT-LLM 路径上没那么明显。我们怀疑不是单纯的 prompt/采样参数问题，而是：
+- 量化元数据（hf_quant_config.json / ModelOpt 格式）在不同后端的解释差异
+- vLLM 的 attention backend / fused kernel 选择是“按兼容性选第一个”，不同机器/CUDA/driver 构建可能选到不同实现，从而引入精度差异
+- 以及业务上还用了 speculative / MTP 类流程，出现过 acceptance rate 直接 0% 的极端情况（感觉是低精度数值误差把验证判定打崩了），这类问题用困惑度/常规 accuracy 不一定提前暴露
+
+我们希望调研并落地一套跨栈 A/B + 回归门禁方案：从 checkpoint 输入规范化（量化元数据一致）→ 后端选择可控/可复现（含 K8s 环境变量/镜像锁定）→ 线下指标 + 行为级指标（speculative acceptance / tool call / 多模态并发）→ 最终上线 gate。
+
+想问：在你们的实践里，NVFP4/FP8 在 vLLM 与 TensorRT-LLM 间做精度一致性评估，最小但足够覆盖风险的 A/B 基准集合应该怎么设计？回归门禁要锁哪些“配置/后端/内核选择”的维度，才能把这类问题提前挡在 CI/CD 或发布前？</pre>
+</details>
+<div class="db-card">
+<div class="db-header">
+<span class="overline">Score Distribution</span>
+<h4>各维度模型得分分布</h4>
+<p class="db-hint">每个维度上，各模型的得分点位。
+<span class="db-legend-dot db-legend-miro"></span>MiroThinker
+<span class="db-legend-dot db-legend-other"></span>Other models</p>
+</div>
+<div class="db-grid">
+<div class="db-row">
+<span class="db-label">Process</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:4"><span class="db-connector"></span><span class="db-name">GPT 8.0</span></span>
+<span class="db-dot db-dot-miro" style="left:85.2%;--row:3"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.5</span></span>
+<span class="db-dot db-dot-miro" style="left:78.6%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 7.1</span></span>
+<span class="db-dot" style="left:80.8%;--row:2"><span class="db-connector"></span><span class="db-name">Gemini 7.2</span></span>
+<span class="db-dot" style="left:78.6%;--row:1"><span class="db-connector"></span><span class="db-name">Claude 7.1</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 3.0</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Synthesis</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 8.2</span></span>
+<span class="db-dot db-dot-miro" style="left:67.4%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 8.1</span></span>
+<span class="db-dot db-dot-miro" style="left:75.6%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 8.2</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 7.9</span></span>
+<span class="db-dot" style="left:51.3%;--row:1"><span class="db-connector"></span><span class="db-name">Claude 8.1</span></span>
+<span class="db-dot" style="left:50.4%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 8.1</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Factuality</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 35.3</span></span>
+<span class="db-dot db-dot-miro" style="left:63.6%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 50.0</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 57.8</span></span>
+<span class="db-dot" style="left:63.6%;--row:1"><span class="db-connector"></span><span class="db-name">Gemini 50.0</span></span>
+<span class="db-dot" style="left:63.6%;--row:2"><span class="db-connector"></span><span class="db-name">Claude 50.0</span></span>
+<span class="db-dot" style="left:63.6%;--row:3"><span class="db-connector"></span><span class="db-name">GLM 50.0</span></span>
+
+</div></div>
+</div>
+</div>
+</div>
+<h3>Process Evaluation Details</h3>
+<table class="score-table">
+<thead><tr><th>Model</th><th>Search Breadth</th><th>Analytical Depth</th><th>Progressive Refinement</th><th>Critical Thinking</th><th>Efficiency</th><th>Findings→Synthesis</th><th>Synthesis→Process</th><th>Contradiction</th></tr></thead>
+<tbody>
+<tr><td><strong>GPT</strong></td><td>8</td><td>8</td><td>8</td><td>7</td><td>8</td><td>9</td><td>7</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17</strong></td><td>7</td><td>7</td><td>8</td><td>7</td><td>6</td><td>9</td><td>7</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17 Mini</strong></td><td>8</td><td>6</td><td>7</td><td>5</td><td>6</td><td>9</td><td>7</td><td>9</td></tr>
+<tr><td><strong>Gemini</strong></td><td>8</td><td>7</td><td>8</td><td>6</td><td>5</td><td>9</td><td>6</td><td>9</td></tr>
+<tr><td><strong>Claude</strong></td><td>9</td><td>6</td><td>7</td><td>6</td><td>6</td><td>9</td><td>5</td><td>9</td></tr>
+<tr><td><strong>GLM Turbo</strong></td><td>1</td><td>3</td><td>2</td><td>4</td><td>2</td><td>7</td><td>2</td><td>3</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+<div class="tab-content" id="tab-8">
+<div class="card">
+<details class="query-details">
+<summary>
+<span class="query-summary-label">Query #87</span>
+<span class="query-summary-hint">点击展开原始查询</span>
+<span class="query-summary-chevron">›</span>
+</summary>
+<pre class="query-text">我们把 Argilla(1.14) 上 12 人两年历史文本分类标注导出为 JSONL，再用自写脚本导入 Prodigy(1.12)/spaCy(3.7) 训练（A100 80G×1，Ubuntu 22.04，Python 3.10）。现象：在同一批“已聚合多数票”的数据上，模型对某些样本预测label_A置信度0.97-0.99，但聚合标签是label_B，且冲突集中在2个相近标签；整体val F1从0.86掉到0.71。已排除：重新训练/固定随机种子仍复现；确认标签集合与文本无乱码；关闭主动学习改为随机采样后仍有高置信冲突。想问如何系统定位根因是(1)标注指南歧义/人员漂移，(2)Argilla→Prodigy导入映射或record id/hash错位导致标签串样，还是(3)主动学习历史采样偏置+模型校准问题？以及如何把一致性/仲裁规则落地到Proidgy recipe或Argilla审阅流？</pre>
+</details>
+<div class="db-card">
+<div class="db-header">
+<span class="overline">Score Distribution</span>
+<h4>各维度模型得分分布</h4>
+<p class="db-hint">每个维度上，各模型的得分点位。
+<span class="db-legend-dot db-legend-miro"></span>MiroThinker
+<span class="db-legend-dot db-legend-other"></span>Other models</p>
+</div>
+<div class="db-grid">
+<div class="db-row">
+<span class="db-label">Process</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:86.7%;--row:3"><span class="db-connector"></span><span class="db-name">GPT 7.6</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:4"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.9</span></span>
+<span class="db-dot db-dot-miro" style="left:79.3%;--row:1"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 7.4</span></span>
+<span class="db-dot" style="left:68.3%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 7.0</span></span>
+<span class="db-dot" style="left:79.3%;--row:2"><span class="db-connector"></span><span class="db-name">Claude 7.4</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 4.9</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Synthesis</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">GPT 8.2</span></span>
+<span class="db-dot db-dot-miro" style="left:59.8%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 8.0</span></span>
+<span class="db-dot db-dot-miro" style="left:43.1%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 7.9</span></span>
+<span class="db-dot" style="left:10.2%;--row:1"><span class="db-connector"></span><span class="db-name">Gemini 7.6</span></span>
+<span class="db-dot" style="left:21.1%;--row:2"><span class="db-connector"></span><span class="db-name">Claude 7.7</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 7.6</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Factuality</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:74.0%;--row:1"><span class="db-connector"></span><span class="db-name">GPT 76.7</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 81.2</span></span>
+<span class="db-dot db-dot-miro" style="left:63.2%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 74.2</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 61.1</span></span>
+<span class="db-dot" style="left:46.8%;--row:1"><span class="db-connector"></span><span class="db-name">Claude 70.5</span></span>
+<span class="db-dot" style="left:42.9%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 69.6</span></span>
+
+</div></div>
+</div>
+</div>
+</div>
+<h3>Process Evaluation Details</h3>
+<table class="score-table">
+<thead><tr><th>Model</th><th>Search Breadth</th><th>Analytical Depth</th><th>Progressive Refinement</th><th>Critical Thinking</th><th>Efficiency</th><th>Findings→Synthesis</th><th>Synthesis→Process</th><th>Contradiction</th></tr></thead>
+<tbody>
+<tr><td><strong>GPT</strong></td><td>7</td><td>8</td><td>8</td><td>7</td><td>6</td><td>9</td><td>7</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17</strong></td><td>8</td><td>7</td><td>8</td><td>7</td><td>6</td><td>9</td><td>8</td><td>10</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17 Mini</strong></td><td>8</td><td>6</td><td>7</td><td>6</td><td>5</td><td>9</td><td>8</td><td>10</td></tr>
+<tr><td><strong>Gemini</strong></td><td>7</td><td>7</td><td>8</td><td>6</td><td>5</td><td>9</td><td>6</td><td>8</td></tr>
+<tr><td><strong>Claude</strong></td><td>9</td><td>7</td><td>8</td><td>6</td><td>7</td><td>9</td><td>6</td><td>7</td></tr>
+<tr><td><strong>GLM Turbo</strong></td><td>2</td><td>3</td><td>2</td><td>2</td><td>6</td><td>9</td><td>6</td><td>9</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+<div class="tab-content" id="tab-9">
+<div class="card">
+<details class="query-details">
+<summary>
+<span class="query-summary-label">Query #88</span>
+<span class="query-summary-hint">点击展开原始查询</span>
+<span class="query-summary-chevron">›</span>
+</summary>
+<pre class="query-text">同一套权重(Qwen2.5-7B-Instruct)在 lm-eval 0.4.12 和 OpenCompass 0.3.3 评分不一致：A100 80G×8(CUDA12.1)，transformers 4.38.2；lm-eval 用 HF backend(fp16, greedy)，OpenCompass 用 vLLM 0.4.2(tp=2,bf16)。MMLU(5-shot) lm-eval 63.1%，OpenCompass 59.0%；GSM8K 73.4% vs 67.2%，无报错。已固定seed/temperature=0、对齐max_new_tokens与few-shot样例、并在单卡上复跑仍差3-6点。lm-eval 0.4.10+ 默认不装后端会不会导致隐式backend/默认prompt不同？有没有一套系统排查路径能把差异归因到：backend实现、tokenizer/chat template、精度/并行、或随机性设置？</pre>
+</details>
+<div class="db-card">
+<div class="db-header">
+<span class="overline">Score Distribution</span>
+<h4>各维度模型得分分布</h4>
+<p class="db-hint">每个维度上，各模型的得分点位。
+<span class="db-legend-dot db-legend-miro"></span>MiroThinker
+<span class="db-legend-dot db-legend-other"></span>Other models</p>
+</div>
+<div class="db-grid">
+<div class="db-row">
+<span class="db-label">Process</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:4"><span class="db-connector"></span><span class="db-name">GPT 7.8</span></span>
+<span class="db-dot db-dot-miro" style="left:90.6%;--row:3"><span class="db-connector"></span><span class="db-name is-miro">MT v17 7.6</span></span>
+<span class="db-dot db-dot-miro" style="left:77.1%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 7.1</span></span>
+<span class="db-dot" style="left:83.8%;--row:1"><span class="db-connector"></span><span class="db-name">Gemini 7.4</span></span>
+<span class="db-dot" style="left:87.2%;--row:2"><span class="db-connector"></span><span class="db-name">Claude 7.5</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 4.5</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Synthesis</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:33.6%;--row:1"><span class="db-connector"></span><span class="db-name">GPT 8.0</span></span>
+<span class="db-dot db-dot-miro" style="left:29.2%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 8.0</span></span>
+<span class="db-dot db-dot-miro" style="left:14.2%;--row:2"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 7.9</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Gemini 7.9</span></span>
+<span class="db-dot" style="left:9.5%;--row:1"><span class="db-connector"></span><span class="db-name">Claude 7.9</span></span>
+<span class="db-dot db-edge-right" style="left:94.0%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 8.4</span></span>
+
+</div></div>
+</div><div class="db-row">
+<span class="db-label">Factuality</span>
+<div class="db-axis"><div class="db-track">
+<div class="db-baseline"></div>
+<span class="db-dot" style="left:91.2%;--row:2"><span class="db-connector"></span><span class="db-name">GPT 76.9</span></span>
+<span class="db-dot db-dot-miro" style="left:64.0%;--row:0"><span class="db-connector"></span><span class="db-name is-miro">MT v17 65.1</span></span>
+<span class="db-dot db-dot-miro db-edge-right" style="left:94.0%;--row:3"><span class="db-connector"></span><span class="db-name is-miro">MT Mini 78.1</span></span>
+<span class="db-dot" style="left:82.4%;--row:1"><span class="db-connector"></span><span class="db-name">Gemini 73.1</span></span>
+<span class="db-dot db-edge-left" style="left:6.0%;--row:0"><span class="db-connector"></span><span class="db-name">Claude 40.0</span></span>
+<span class="db-dot" style="left:81.5%;--row:0"><span class="db-connector"></span><span class="db-name">GLM 72.7</span></span>
+
+</div></div>
+</div>
+</div>
+</div>
+<h3>Process Evaluation Details</h3>
+<table class="score-table">
+<thead><tr><th>Model</th><th>Search Breadth</th><th>Analytical Depth</th><th>Progressive Refinement</th><th>Critical Thinking</th><th>Efficiency</th><th>Findings→Synthesis</th><th>Synthesis→Process</th><th>Contradiction</th></tr></thead>
+<tbody>
+<tr><td><strong>GPT</strong></td><td>8</td><td>7</td><td>8</td><td>8</td><td>7</td><td>7</td><td>8</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17</strong></td><td>8</td><td>7</td><td>8</td><td>8</td><td>5</td><td>9</td><td>7</td><td>9</td></tr>
+<tr class="mirothinker-row"><td><strong>MiroThinker v17 Mini</strong></td><td>8</td><td>6</td><td>7</td><td>6</td><td>5</td><td>9</td><td>7</td><td>9</td></tr>
+<tr><td><strong>Gemini</strong></td><td>7</td><td>8</td><td>8</td><td>6</td><td>7</td><td>9</td><td>6</td><td>8</td></tr>
+<tr><td><strong>Claude</strong></td><td>8</td><td>8</td><td>7</td><td>7</td><td>6</td><td>9</td><td>6</td><td>9</td></tr>
+<tr><td><strong>GLM Turbo</strong></td><td>3</td><td>4</td><td>4</td><td>4</td><td>5</td><td>8</td><td>3</td><td>5</td></tr>
+
+</tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+<script>
+function switchTab(idx) {
+    document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', i === idx);
+    });
+    document.querySelectorAll('.tab-content').forEach((content, i) => {
+        content.classList.toggle('active', i === idx);
+    });
+}
+</script>
+</body>
+</html>
